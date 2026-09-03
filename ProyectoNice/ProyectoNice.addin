@@ -1,0 +1,15 @@
+﻿<RevitAddIns>
+    <AddIn Type="Application">
+        <Name>ProyectoNice</Name>
+        <Assembly>ProyectoNice\ProyectoNice.dll</Assembly>
+        <AddInId>23E80B63-B704-40CC-A53E-40C213AE33EA</AddInId>
+        <FullClassName>ProyectoNice.Application</FullClassName>
+        <VendorId>Development</VendorId>
+        <VendorDescription></VendorDescription>
+        <VendorEmail></VendorEmail>
+    </AddIn>
+    <ManifestSettings>
+        <UseRevitContext>False</UseRevitContext>
+        <ContextName>ProyectoNice</ContextName>
+    </ManifestSettings>
+</RevitAddIns>

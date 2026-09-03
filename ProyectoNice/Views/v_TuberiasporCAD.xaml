@@ -1,0 +1,71 @@
+﻿<Window x:Class="ProyectoNice.Views.v_TuberiasporCAD"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ProyectoNice.Views"
+        mc:Ignorable="d"
+        Title="Tuberias por CAD" Width=" 550" Height="400">
+    <DockPanel Margin="10">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Center" Margin="4">
+            <Button Margin="2" Command="{Binding AceptarBT}" Padding="3">Aceptar</Button >
+            <Button Margin="2" Padding="3" Command="{Binding CancelarBT}">Cancelar</Button>
+        </StackPanel>
+        <GroupBox DockPanel.Dock="Left" Header="Datos de Entrada - Tuberias">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition Width="230"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <!--Labels-->
+                <TextBlock Margin="2" VerticalAlignment="Center">Tipo de Tuberia</TextBlock>
+                <TextBlock Margin="2" VerticalAlignment="Center" Grid.Row="1">Sistema de Tuberia</TextBlock>
+                <TextBlock Margin="2" VerticalAlignment="Center" Grid.Row="2">Nivel de Tuberia</TextBlock>
+                <TextBlock Margin="2" VerticalAlignment="Center" Grid.Row="3">Diametro de Tuberia</TextBlock>
+                <!--Opciones-->
+                <ComboBox Grid.Column="1" Height="25" HorizontalAlignment="Center" Width="200"
+                          ItemsSource="{Binding LstTiposCB}"
+                          SelectedItem="{Binding TipoSeleccCB}"
+                          DisplayMemberPath="Name"
+                          ></ComboBox>
+                <ListBox Grid.Column="1" Grid.Row="1" Margin="4" HorizontalAlignment="Center" Width="200" Height="180"
+                        ItemsSource="{Binding LstSistLB}"
+                        SelectedItem="{Binding SistSeleccLB}"
+                         DisplayMemberPath="Name">
+                </ListBox>
+                
+                <ComboBox Grid.Column="1" Grid.Row="2" Height="25" HorizontalAlignment="Center" Width="200"
+                        ItemsSource="{Binding LstNvlCB}"
+                        SelectedItem="{Binding NvlSeleccCB}"
+                            DisplayMemberPath="Name"
+                          
+                          ></ComboBox>
+                <TextBox Grid.Row="3" Grid.Column="1" Margin=" 4" Width="200" Text="{Binding DiametroTX}">
+                </TextBox>
+            </Grid>
+        </GroupBox>
+        <GroupBox DockPanel.Dock="Right" Header="CAD" Width="150" Height="250">
+            <StackPanel>
+                <TextBlock Margin="4">Elegir CAD:</TextBlock>
+                <ComboBox Margin="3"
+                        ItemsSource="{Binding LstCADCB}"
+                        SelectedItem="{Binding CADSeleccCB}"
+                         DisplayMemberPath="Category.Name"
+                          ></ComboBox>
+                <ListBox Margin="3" Height="150"
+                        ItemsSource="{Binding LstCapasCB}"
+                        SelectedItem="{Binding CapaSeleccCB}"
+                         DisplayMemberPath="Name"
+                         ></ListBox>
+            </StackPanel>
+        </GroupBox>
+    </DockPanel>
+</Window>

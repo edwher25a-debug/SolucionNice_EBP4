@@ -1,0 +1,41 @@
+﻿<Window x:Class="ProyectoNice.Views.v_CrearSuelos"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ProyectoNice.Views"
+        mc:Ignorable="d"
+        Title="SCRIPT:Crear Suelos" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen">
+    <DockPanel Margin="10">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Margin="2" Background="Green" Foreground="White" Padding="6" Command="{Binding AceptarBT}">Aceptar</Button >
+            <Button Margin="2" Background="Red" Foreground="White" Padding="6" Command="{Binding CancelarBT}">Cancelar</Button>
+        </StackPanel>
+        <GroupBox DockPanel.Dock="Top" Margin="2" Header="Datos de Entrada" BorderBrush="DarkKhaki">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="150"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock Margin="4">Nivel</TextBlock>
+                <TextBlock Margin="4" Grid.Row="1" >Tipo de Suelo</TextBlock>
+                <ComboBox Grid.Column="1" Margin="2" ItemsSource="{Binding ListaNivelesCB}" SelectedItem="{Binding NivelSeleccCB}" DisplayMemberPath="Name"/>
+
+                <ComboBox Grid.Row="1" Grid.Column="1" Margin="2" ItemsSource="{Binding ListaTiposCB}" SelectedItem="{Binding TipoSeleccCB}" DisplayMemberPath="Name"/>
+
+            </Grid>
+            
+            
+            
+        </GroupBox>
+
+
+
+
+
+    </DockPanel>
+</Window>
