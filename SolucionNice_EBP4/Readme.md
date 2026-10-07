@@ -1,6 +1,6 @@
 # SolucionNice_EBP4
 
-Autodesk Revit plugin project organized into multiple solution files that target versions 2021 - 2026.
+Autodesk Revit plugin project organized into multiple solution files that target versions 2024 - 2026.
 
 ## Table of content
 
