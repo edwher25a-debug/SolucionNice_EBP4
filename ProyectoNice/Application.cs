@@ -25,6 +25,9 @@ namespace ProyectoNice
 
             panel.AddPushButton<ExportarFichasCmd>("Exportar\nfichas")
                 .SetLargeImage("/ProyectoNice;component/Resources/Icons/RibbonIcon32.png");
+
+            panel.AddPushButton<ACEROS_PILOTESCmd>("Aceros\npilotes")
+                .SetLargeImage("/ProyectoNice;component/Resources/Icons/RibbonIcon32.png");
         }
     }
 }

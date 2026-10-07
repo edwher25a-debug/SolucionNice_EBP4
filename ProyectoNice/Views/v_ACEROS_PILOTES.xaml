@@ -5,37 +5,37 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProyectoNice.Views"
         mc:Ignorable="d"
-        Title="ACEROS" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" HorizontalAlignment="Right" VerticalAlignment="Top" Background="{x:Null}">
+        Title="SCRIPT:Aceros Pilotes" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
     <DockPanel Margin="10">
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Background="#FF143042" Foreground="White" Padding="6" Command="{Binding AceptarBT}" Height="29" Width="52" Content="Apply"/>
-            <Button Margin="2" Background="#FF143042" Foreground="White" Padding="6" Command="{Binding CancelarBT}" Content="Remove"/>
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Margin="2" Background="#FF143042" Foreground="White" Padding="6" Command="{Binding AceptarBT}">Seleccionar cara</Button>
+            <Button Margin="2" Background="#FF143042" Foreground="White" Padding="6" Command="{Binding CancelarBT}">Cancelar</Button>
         </StackPanel>
-        <GroupBox DockPanel.Dock="Top" Margin="2" Header="ELEMENT SELECTION" BorderBrush="#FF20292F" Foreground="#FFFDFDFD" HorizontalAlignment="Left">
+        <GroupBox DockPanel.Dock="Top" Margin="2" Header="Refuerzo longitudinal" BorderBrush="#FF20292F">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="170"/>
                     <ColumnDefinition Width="150"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
-                <TextBlock Margin="4">CATEGORY</TextBlock>
+                <TextBlock Margin="4">Tipo de barra</TextBlock>
+                <TextBlock Margin="4" Grid.Row="1">Numero de barras</TextBlock>
+                <TextBlock Margin="4" Grid.Row="2">Recubrimiento (cm)</TextBlock>
+                <TextBlock Margin="4" Grid.Row="3">Longitud sobre cara (m)</TextBlock>
+                <TextBlock Margin="4" Grid.Row="4">Longitud bajo cara (m)</TextBlock>
 
-                <ComboBox Grid.Column="1" Margin="2" ItemsSource="{Binding ListaCagoriasCB}" SelectedItem="{Binding CategoriasSeleccCB}" DisplayMemberPath="Name"/>
-
-
-
+                <ComboBox Grid.Column="1" Margin="2" ItemsSource="{Binding ListaBarrasCB}" SelectedItem="{Binding BarraSeleccCB}" DisplayMemberPath="Name"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Margin="2" Text="{Binding NumeroBarras}"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Margin="2" Text="{Binding RecubrimientoCm}"/>
+                <TextBox Grid.Row="3" Grid.Column="1" Margin="2" Text="{Binding LongitudSobreCaraM}"/>
+                <TextBox Grid.Row="4" Grid.Column="1" Margin="2" Text="{Binding LongitudBajoCaraM}"/>
             </Grid>
-
-
-
         </GroupBox>
-
-
-
-
-
     </DockPanel>
 </Window>

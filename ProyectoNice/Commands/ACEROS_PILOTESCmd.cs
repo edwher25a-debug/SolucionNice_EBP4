@@ -10,7 +10,7 @@ namespace ProyectoNice.Commands
     /// </summary>
     [UsedImplicitly]
     [Transaction(TransactionMode.Manual)]
-    public class ACEROS_PIOTESCmd : ExternalCommand
+    public class ACEROS_PILOTESCmd : ExternalCommand
     {
         public override void Execute()
         {

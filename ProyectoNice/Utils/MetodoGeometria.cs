@@ -53,5 +53,29 @@ namespace ProyectoNice.Utils
             return listaSolidos;
         }
 
+        public static PlanarFace ObtenerCaraPlanarEnPunto(Element elem, XYZ punto)
+        {
+            //Caras en coordenadas del modelo (incluye geometria de familias)
+            var caras = new List<PlanarFace>();
+            RecolectarCaras(elem.get_Geometry(new Options()), caras);
+
+            return caras
+                .Select(c => new { Cara = c, Proy = c.Project(punto) })
+                .Where(x => x.Proy != null)
+                .OrderBy(x => x.Proy.Distance)
+                .Select(x => x.Cara)
+                .FirstOrDefault();
+        }
+
+        private static void RecolectarCaras(GeometryElement ge, List<PlanarFace> caras)
+        {
+            foreach (GeometryObject go in ge)
+            {
+                if (go is Solid solido && solido.Volume > 0)
+                    caras.AddRange(solido.Faces.OfType<PlanarFace>());
+                else if (go is GeometryInstance gi)
+                    RecolectarCaras(gi.GetInstanceGeometry(), caras);
+            }
+        }
     }
 }
