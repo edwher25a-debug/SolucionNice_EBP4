@@ -18,11 +18,28 @@ namespace ProyectoNice.Commands
     ///     jerarquia, relaciones y decisiones, no un volcado de parametros.
     /// </summary>
     [UsedImplicitly]
-    [Transaction(TransactionMode.ReadOnly)]
+    [Transaction(TransactionMode.Manual)]
     public class ExportarFichasCmd : ExternalCommand
     {
         /// <summary>Tolerancia vertical para considerar que un elemento se apoya en otro (metros).</summary>
         private const double ToleranciaApoyoM = 0.35;
+
+        /// <summary>
+        ///     Fraccion minima de elementos de una categoria que deben tener el parametro
+        ///     agrupador para que se use en esa categoria. Evita que 3 elementos con
+        ///     "Marca de tipo" rellena creen fichas fantasma junto a las agrupadas por tipo.
+        /// </summary>
+        private const double CoberturaMinimaAgrupador = 0.60;
+
+        /// <summary>Por encima de este numero de elementos no se calcula volumen con geometria (lento).</summary>
+        private const int LimiteVolumenPorGeometria = 2000;
+
+        /// <summary>
+        ///     Si el modelo usa categorias que no estan en la lista de abajo —por ejemplo las
+        ///     categorias de puente de Revit 2023+— pon esto en true y se recorren todas
+        ///     las categorias de modelo.
+        /// </summary>
+        private const bool UsarTodasLasCategoriasDeModelo = false;
 
         /// <summary>Parametros que se prueban, en orden, para agrupar instancias en una ficha.</summary>
         private static readonly string[] ParametrosAgrupador =
@@ -39,41 +56,66 @@ namespace ProyectoNice.Commands
             BuiltInCategory.OST_Floors,
             BuiltInCategory.OST_Walls,
             BuiltInCategory.OST_Stairs,
-            BuiltInCategory.OST_Railing,
+            BuiltInCategory.OST_StairsRailing,
             BuiltInCategory.OST_GenericModel,
             BuiltInCategory.OST_StructuralStiffener
         };
 
         public override void Execute()
         {
-            var doc = Document;
-
-            var carpeta = ResolverCarpetaSalida(doc);
-            Directory.CreateDirectory(carpeta);
-
-            var elementos = RecolectarElementos(doc);
-            if (elementos.Count == 0)
+            try
             {
+                var doc = Document;
+                if (doc == null)
+                {
+                    TaskDialog.Show("Exportar fichas", "No hay ningun modelo abierto.");
+                    return;
+                }
+
+                string carpeta;
+                if (!TryResolverCarpetaSalida(doc, out carpeta, out var motivo))
+                {
+                    TaskDialog.Show("Exportar fichas", motivo);
+                    return;
+                }
+
+                Directory.CreateDirectory(carpeta);
+
+                var elementos = RecolectarElementos(doc);
+                if (elementos.Count == 0)
+                {
+                    TaskDialog.Show("Exportar fichas",
+                        "No se encontraron elementos en las categorias exportadas.\n" +
+                        "Prueba poniendo UsarTodasLasCategoriasDeModelo en true.");
+                    return;
+                }
+
+                var usarGeometria = elementos.Count <= LimiteVolumenPorGeometria;
+                List<Caja> cajas;
+                var fichas = AgruparEnFichas(doc, elementos, usarGeometria, out cajas);
+                CalcularApoyos(cajas);
+
+                AsignarNombresDeArchivo(fichas);
+
+                foreach (var ficha in fichas)
+                    File.WriteAllText(Path.Combine(carpeta, ficha.Archivo),
+                        RenderizarFicha(ficha, doc), new UTF8Encoding(false));
+
+                File.WriteAllText(Path.Combine(carpeta, "00-indice.md"),
+                    RenderizarIndice(fichas, doc), new UTF8Encoding(false));
+
+                var aviso = usarGeometria
+                    ? string.Empty
+                    : $"\n\nNota: {elementos.Count} elementos superan el limite de {LimiteVolumenPorGeometria};" +
+                      " el volumen se leyo solo del parametro, sin calcular geometria.";
+
                 TaskDialog.Show("Exportar fichas",
-                    "No se encontraron elementos en las categorias exportadas.\n" +
-                    "Revisa CategoriasExportadas en ExportarFichasCmd.cs.");
-                return;
+                    $"{fichas.Count} fichas escritas a partir de {elementos.Count} elementos.\n\n{carpeta}{aviso}");
             }
-
-            var fichas = AgruparEnFichas(doc, elementos);
-            CalcularApoyos(fichas);
-
-            foreach (var ficha in fichas)
+            catch (Exception ex)
             {
-                var ruta = Path.Combine(carpeta, Sanitizar(ficha.Nombre) + ".md");
-                File.WriteAllText(ruta, RenderizarFicha(ficha, doc), new UTF8Encoding(false));
+                TaskDialog.Show("Exportar fichas - ERROR", ex.ToString());
             }
-
-            File.WriteAllText(Path.Combine(carpeta, "00-indice.md"),
-                RenderizarIndice(fichas, doc), new UTF8Encoding(false));
-
-            TaskDialog.Show("Exportar fichas",
-                $"{fichas.Count} fichas escritas a partir de {elementos.Count} elementos.\n\n{carpeta}");
         }
 
         // ------------------------------------------------------------------
@@ -82,6 +124,16 @@ namespace ProyectoNice.Commands
 
         private static List<Element> RecolectarElementos(Document doc)
         {
+            if (UsarTodasLasCategoriasDeModelo)
+            {
+                return new FilteredElementCollector(doc)
+                    .WhereElementIsNotElementType()
+                    .Where(e => e.Category != null
+                                && e.Category.CategoryType == CategoryType.Model
+                                && e.get_BoundingBox(null) != null)
+                    .ToList();
+            }
+
             var filtro = new ElementMulticategoryFilter(CategoriasExportadas);
             return new FilteredElementCollector(doc)
                 .WhereElementIsNotElementType()
@@ -91,16 +143,29 @@ namespace ProyectoNice.Commands
         }
 
         // ------------------------------------------------------------------
-        //  Agrupacion: una ficha por elemento coordinable, no por instancia
+        //  Agrupacion
         // ------------------------------------------------------------------
 
-        private static List<Ficha> AgruparEnFichas(Document doc, List<Element> elementos)
+        private static List<Ficha> AgruparEnFichas(Document doc, List<Element> elementos, bool usarGeometria,
+            out List<Caja> cajas)
         {
+            cajas = new List<Caja>();
+            // Decision por categoria: el parametro agrupador solo se usa si lo tiene
+            // la mayoria de la categoria. Si no, toda la categoria cae a tipo + nivel,
+            // y el resultado queda consistente en vez de mezclado.
+            var categoriasConAgrupador = elementos
+                .GroupBy(e => e.Category.Name)
+                .Where(g => g.Count(e => !string.IsNullOrWhiteSpace(LeerAgrupador(e)))
+                            >= g.Count() * CoberturaMinimaAgrupador)
+                .Select(g => g.Key)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
             var mapa = new Dictionary<string, Ficha>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var elem in elementos)
             {
-                var clave = ConstruirClave(doc, elem);
+                var usaAgrupador = categoriasConAgrupador.Contains(elem.Category.Name);
+                var clave = ConstruirClave(doc, elem, usaAgrupador);
 
                 if (!mapa.TryGetValue(clave, out var ficha))
                 {
@@ -110,14 +175,17 @@ namespace ProyectoNice.Commands
                         Categoria = elem.Category.Name,
                         Tipo = NombreDeTipo(doc, elem),
                         Nivel = NombreDeNivel(doc, elem),
-                        Agrupador = LeerAgrupador(elem)
+                        Agrupador = usaAgrupador ? LeerAgrupador(elem) : null
                     };
                     mapa[clave] = ficha;
                 }
 
                 ficha.Instancias.Add(elem);
-                ficha.VolumenM3 += VolumenM3(elem);
+                ficha.VolumenM3 += VolumenM3(elem, usarGeometria);
                 ficha.ExpandirCaja(elem);
+
+                var caja = Caja.Desde(elem, ficha);
+                if (caja != null) cajas.Add(caja);
 
                 var material = NombreDeMaterial(doc, elem);
                 if (!string.IsNullOrWhiteSpace(material) && !ficha.Materiales.Contains(material))
@@ -127,16 +195,14 @@ namespace ProyectoNice.Commands
             return mapa.Values.OrderBy(f => f.Categoria).ThenBy(f => f.Nombre).ToList();
         }
 
-        /// <summary>
-        ///     Clave de agrupacion. Si el modelo tiene un parametro de abscisa o eje se usa ese,
-        ///     que es lo que hace que la ficha represente "Pila P-3" y no "todas las columnas".
-        ///     Si no existe, cae a categoria + tipo + nivel.
-        /// </summary>
-        private static string ConstruirClave(Document doc, Element elem)
+        private static string ConstruirClave(Document doc, Element elem, bool usaAgrupador)
         {
-            var agrupador = LeerAgrupador(elem);
-            if (!string.IsNullOrWhiteSpace(agrupador))
-                return $"{elem.Category.Name} - {agrupador}";
+            if (usaAgrupador)
+            {
+                var agrupador = LeerAgrupador(elem);
+                if (!string.IsNullOrWhiteSpace(agrupador))
+                    return $"{elem.Category.Name} - {agrupador}";
+            }
 
             var nivel = NombreDeNivel(doc, elem);
             var tipo = NombreDeTipo(doc, elem);
@@ -163,34 +229,114 @@ namespace ProyectoNice.Commands
         // ------------------------------------------------------------------
 
         /// <summary>
-        ///     Deduce "apoya_en" comparando cajas envolventes agregadas por ficha:
-        ///     la base de A coincide en cota con el tope de B y sus proyecciones en planta se solapan.
-        ///     Es una inferencia, no un hecho del modelo; se marca como tal en la ficha.
+        ///     Deduce "apoya_en" comparando INSTANCIA contra INSTANCIA, no ficha contra ficha.
+        ///     La caja agregada de una ficha cubre todo el edificio, asi que comparando a ese
+        ///     nivel todo toca con todo: 11 columnas salian apoyadas en 13 zapatas distintas.
+        ///     Cada instancia busca solo lo que tiene justo debajo, y la ficha hereda los
+        ///     tipos que sus instancias tocan de verdad.
+        ///
+        ///     Para no degradar a O(n^2) en modelos grandes, las cajas se ordenan por cota
+        ///     superior y cada elemento se compara solo contra su banda vertical, localizada
+        ///     con busqueda binaria.
         /// </summary>
-        private static void CalcularApoyos(List<Ficha> fichas)
+        private static void CalcularApoyos(List<Caja> cajas)
         {
-            var conCaja = fichas.Where(f => f.TieneCaja).ToList();
+            if (cajas.Count == 0) return;
 
-            foreach (var arriba in conCaja)
+            var porTope = cajas.OrderBy(c => c.MaxZ).ToList();
+            var topes = new double[porTope.Count];
+            for (var i = 0; i < porTope.Count; i++) topes[i] = porTope[i].MaxZ;
+
+            foreach (var arriba in cajas)
             {
-                foreach (var abajo in conCaja)
-                {
-                    if (ReferenceEquals(arriba, abajo)) continue;
+                var inicio = PrimerIndiceDesde(topes, arriba.MinZ - ToleranciaApoyoM);
+                var limite = arriba.MinZ + ToleranciaApoyoM;
 
-                    var salto = Math.Abs(arriba.MinZ - abajo.MaxZ);
-                    if (salto > ToleranciaApoyoM) continue;
+                for (var i = inicio; i < porTope.Count; i++)
+                {
+                    var abajo = porTope[i];
+                    if (abajo.MaxZ > limite) break;
+
+                    if (ReferenceEquals(abajo, arriba)) continue;
+                    if (ReferenceEquals(abajo.Ficha, arriba.Ficha)) continue;
                     if (!SeSolapanEnPlanta(arriba, abajo)) continue;
 
-                    arriba.ApoyaEn.Add(abajo.Nombre);
-                    abajo.Soporta.Add(arriba.Nombre);
+                    arriba.Ficha.ApoyaEn.Add(abajo.Ficha.Nombre);
+                    abajo.Ficha.Soporta.Add(arriba.Ficha.Nombre);
                 }
             }
         }
 
-        private static bool SeSolapanEnPlanta(Ficha a, Ficha b)
+        /// <summary>Primer indice cuyo valor es &gt;= objetivo, sobre un array ya ordenado.</summary>
+        private static int PrimerIndiceDesde(double[] ordenados, double objetivo)
+        {
+            var lo = 0;
+            var hi = ordenados.Length;
+            while (lo < hi)
+            {
+                var medio = lo + (hi - lo) / 2;
+                if (ordenados[medio] < objetivo) lo = medio + 1;
+                else hi = medio;
+            }
+            return lo;
+        }
+
+        private static bool SeSolapanEnPlanta(Caja a, Caja b)
         {
             return a.MinX <= b.MaxX && b.MinX <= a.MaxX
                 && a.MinY <= b.MaxY && b.MinY <= a.MaxY;
+        }
+
+        // ------------------------------------------------------------------
+        //  Nombres de archivo: seguros para markdown y sin colisiones
+        // ------------------------------------------------------------------
+
+        private static void AsignarNombresDeArchivo(List<Ficha> fichas)
+        {
+            var usados = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var ficha in fichas)
+            {
+                var basePropuesta = Slug(ficha.Nombre);
+                if (string.IsNullOrWhiteSpace(basePropuesta)) basePropuesta = "ficha";
+
+                var candidata = basePropuesta;
+                var n = 2;
+                while (!usados.Add(candidata + ".md"))
+                    candidata = basePropuesta + "-" + n++;
+
+                ficha.Archivo = candidata + ".md";
+            }
+        }
+
+        /// <summary>
+        ///     Convierte un nombre a un identificador seguro: minusculas, sin espacios,
+        ///     sin parentesis ni acentos. Los parentesis rompen los enlaces markdown y
+        ///     los espacios obligan a codificar la URL, asi que se eliminan de raiz.
+        /// </summary>
+        private static string Slug(string texto)
+        {
+            var normalizado = texto.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder(normalizado.Length);
+            var guionPendiente = false;
+
+            foreach (var c in normalizado)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.NonSpacingMark) continue;
+
+                if (char.IsLetterOrDigit(c))
+                {
+                    if (guionPendiente && sb.Length > 0) sb.Append('-');
+                    guionPendiente = false;
+                    sb.Append(char.ToLowerInvariant(c));
+                }
+                else
+                {
+                    guionPendiente = true;
+                }
+            }
+
+            return sb.ToString();
         }
 
         // ------------------------------------------------------------------
@@ -230,8 +376,10 @@ namespace ProyectoNice.Commands
             }
             else
             {
-                foreach (var n in f.ApoyaEn.OrderBy(x => x)) sb.AppendLine($"- apoya_en -> {n}  <!-- INFERRED: geometria -->");
-                foreach (var n in f.Soporta.OrderBy(x => x)) sb.AppendLine($"- soporta -> {n}  <!-- INFERRED: geometria -->");
+                foreach (var n in f.ApoyaEn.OrderBy(x => x))
+                    sb.AppendLine($"- apoya_en -> {n}  <!-- INFERRED: geometria -->");
+                foreach (var n in f.Soporta.OrderBy(x => x))
+                    sb.AppendLine($"- soporta -> {n}  <!-- INFERRED: geometria -->");
             }
             sb.AppendLine();
 
@@ -252,7 +400,7 @@ namespace ProyectoNice.Commands
             var sb = new StringBuilder();
             sb.AppendLine($"# {NombreDeProyecto(doc)} - Indice de fichas");
             sb.AppendLine();
-            sb.AppendLine($"Exportado el {DateTime.Now:yyyy-MM-dd HH:mm} desde {Path.GetFileName(doc.PathName)}");
+            sb.AppendLine($"Exportado el {DateTime.Now:yyyy-MM-dd HH:mm} desde {NombreDeArchivoModelo(doc)}");
             sb.AppendLine();
             sb.AppendLine($"{fichas.Count} fichas · {fichas.Sum(f => f.Instancias.Count)} instancias");
             sb.AppendLine();
@@ -261,8 +409,8 @@ namespace ProyectoNice.Commands
             {
                 sb.AppendLine($"## {grupo.Key}");
                 sb.AppendLine();
-                foreach (var f in grupo.OrderBy(f => f.Nombre))
-                    sb.AppendLine($"- [{f.Nombre}]({Sanitizar(f.Nombre)}.md) — {f.Instancias.Count} instancia(s)");
+                foreach (var f in grupo.OrderBy(x => x.Nombre))
+                    sb.AppendLine($"- [{f.Nombre}]({f.Archivo}) — {f.Instancias.Count} instancia(s)");
                 sb.AppendLine();
             }
 
@@ -273,20 +421,67 @@ namespace ProyectoNice.Commands
         //  Ayudas
         // ------------------------------------------------------------------
 
-        private static string ResolverCarpetaSalida(Document doc)
+        /// <summary>
+        ///     Resuelve donde escribir. Un central en servidor (RSN://) o en la nube no
+        ///     tiene ruta de disco, asi que en ese caso se cae a Mis Documentos en vez
+        ///     de reventar dentro de Path.GetDirectoryName.
+        /// </summary>
+        private static bool TryResolverCarpetaSalida(Document doc, out string carpeta, out string motivo)
         {
-            var baseDir = string.IsNullOrWhiteSpace(doc.PathName)
-                ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-                : Path.GetDirectoryName(doc.PathName);
+            carpeta = null;
+            motivo = null;
 
-            return Path.Combine(baseDir ?? ".", "fichas");
+            var misDocumentos = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var nombre = NombreDeArchivoModelo(doc);
+
+            try
+            {
+                var ruta = doc.PathName;
+
+                var esDisco = !string.IsNullOrWhiteSpace(ruta)
+                              && ruta.IndexOf("://", StringComparison.Ordinal) < 0
+                              && Path.IsPathRooted(ruta);
+
+                var baseDir = esDisco ? Path.GetDirectoryName(ruta) : null;
+
+                if (string.IsNullOrWhiteSpace(baseDir))
+                    baseDir = Path.Combine(misDocumentos, "ProyectoNice", Slug(nombre));
+
+                carpeta = Path.Combine(baseDir, "fichas");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                motivo = "No se pudo resolver la carpeta de salida.\n\n" + ex.Message;
+                return false;
+            }
+        }
+
+        private static string NombreDeArchivoModelo(Document doc)
+        {
+            var ruta = doc.PathName;
+            if (!string.IsNullOrWhiteSpace(ruta))
+            {
+                try { return Path.GetFileName(ruta); } catch { /* ruta no-disco */ }
+            }
+            return string.IsNullOrWhiteSpace(doc.Title) ? "modelo" : doc.Title;
         }
 
         private static string NombreDeProyecto(Document doc)
         {
             var info = doc.ProjectInformation;
-            if (info != null && !string.IsNullOrWhiteSpace(info.Name)) return info.Name;
-            return string.IsNullOrWhiteSpace(doc.Title) ? "Modelo sin titulo" : doc.Title;
+            var nombre = info?.Name;
+
+            // "Project Name" es el valor por defecto de la plantilla de Revit:
+            // no identifica nada, asi que se prefiere el nombre del archivo.
+            if (string.IsNullOrWhiteSpace(nombre)
+                || nombre.Equals("Project Name", StringComparison.OrdinalIgnoreCase)
+                || nombre.Equals("Nombre del proyecto", StringComparison.OrdinalIgnoreCase))
+            {
+                return Path.GetFileNameWithoutExtension(NombreDeArchivoModelo(doc));
+            }
+
+            return nombre;
         }
 
         private static string NombreDeTipo(Document doc, Element elem)
@@ -316,15 +511,17 @@ namespace ProyectoNice.Commands
             }
         }
 
-        private static double VolumenM3(Element elem)
+        private static double VolumenM3(Element elem, bool usarGeometria)
         {
             var p = elem.get_Parameter(BuiltInParameter.HOST_VOLUME_COMPUTED);
             if (p != null && p.HasValue) return MetodoUnidades.Pies3AMetros3(p.AsDouble());
 
+            if (!usarGeometria) return 0d;
+
             try
             {
                 var solidos = MetodoGeometria.ObtenerSolidos(elem);
-                return MetodoUnidades.Pies3AMetros3(solidos.Sum(s => s.Volume));
+                return solidos == null ? 0d : MetodoUnidades.Pies3AMetros3(solidos.Sum(s => s.Volume));
             }
             catch
             {
@@ -347,19 +544,36 @@ namespace ProyectoNice.Commands
             return valor.ToString("0.00", CultureInfo.InvariantCulture);
         }
 
-        private static string Sanitizar(string nombre)
-        {
-            var sb = new StringBuilder(nombre.Length);
-            foreach (var c in nombre)
-                sb.Append(Path.GetInvalidFileNameChars().Contains(c) ? '_' : c);
-            return sb.ToString().Trim();
-        }
-
         // ------------------------------------------------------------------
+
+        /// <summary>Caja envolvente de UNA instancia, en metros, con la ficha a la que pertenece.</summary>
+        private class Caja
+        {
+            public Ficha Ficha;
+            public double MinX, MinY, MinZ, MaxX, MaxY, MaxZ;
+
+            public static Caja Desde(Element elem, Ficha ficha)
+            {
+                var bb = elem.get_BoundingBox(null);
+                if (bb == null) return null;
+
+                return new Caja
+                {
+                    Ficha = ficha,
+                    MinX = MetodoUnidades.PiesAMetros(bb.Min.X),
+                    MinY = MetodoUnidades.PiesAMetros(bb.Min.Y),
+                    MinZ = MetodoUnidades.PiesAMetros(bb.Min.Z),
+                    MaxX = MetodoUnidades.PiesAMetros(bb.Max.X),
+                    MaxY = MetodoUnidades.PiesAMetros(bb.Max.Y),
+                    MaxZ = MetodoUnidades.PiesAMetros(bb.Max.Z)
+                };
+            }
+        }
 
         private class Ficha
         {
             public string Nombre;
+            public string Archivo;
             public string Categoria;
             public string Tipo;
             public string Nivel;
@@ -379,15 +593,12 @@ namespace ProyectoNice.Commands
                 var caja = elem.get_BoundingBox(null);
                 if (caja == null) return;
 
-                var min = caja.Min;
-                var max = caja.Max;
-
-                var nMinX = MetodoUnidades.PiesAMetros(min.X);
-                var nMinY = MetodoUnidades.PiesAMetros(min.Y);
-                var nMinZ = MetodoUnidades.PiesAMetros(min.Z);
-                var nMaxX = MetodoUnidades.PiesAMetros(max.X);
-                var nMaxY = MetodoUnidades.PiesAMetros(max.Y);
-                var nMaxZ = MetodoUnidades.PiesAMetros(max.Z);
+                var nMinX = MetodoUnidades.PiesAMetros(caja.Min.X);
+                var nMinY = MetodoUnidades.PiesAMetros(caja.Min.Y);
+                var nMinZ = MetodoUnidades.PiesAMetros(caja.Min.Z);
+                var nMaxX = MetodoUnidades.PiesAMetros(caja.Max.X);
+                var nMaxY = MetodoUnidades.PiesAMetros(caja.Max.Y);
+                var nMaxZ = MetodoUnidades.PiesAMetros(caja.Max.Z);
 
                 if (!TieneCaja)
                 {

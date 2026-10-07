@@ -1,11 +1,11 @@
-﻿<Window x:Class="ProyectoNice.Views.v_TrabajoHome"
+﻿<Window x:Class="ProyectoNice.Views.v_ACEROS_PILOTES"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProyectoNice.Views"
         mc:Ignorable="d"
-        Title="COORDINATES" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" HorizontalAlignment="Right" VerticalAlignment="Top" Background="{x:Null}">
+        Title="ACEROS" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" HorizontalAlignment="Right" VerticalAlignment="Top" Background="{x:Null}">
     <DockPanel Margin="10">
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button Background="#FF143042" Foreground="White" Padding="6" Command="{Binding AceptarBT}" Height="29" Width="52" Content="Apply"/>

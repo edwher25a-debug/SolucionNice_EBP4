@@ -19,3 +19,6 @@
 
 #User-specific files
 *.user
+# Salida del instalador WixSharp / NUKE
+**/install/output/
+*.wixobj
