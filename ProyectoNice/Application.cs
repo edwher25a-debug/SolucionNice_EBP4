@@ -19,20 +19,7 @@ namespace ProyectoNice
         {
             var panel = Application.CreatePanel("MisBotones", "ProyectoNice");
 
-            panel.AddPushButton<TrabajoHomeCmd>("home")
-
-                .SetLargeImage("/ProyectoNice;component/Resources/Icons/icons8-pin-de-ubicación.png");
-
-            panel.AddPushButton<ExportarFichasCmd>("Exportar\nfichas")
-                .SetLargeImage("/ProyectoNice;component/Resources/Icons/RibbonIcon32.png");
-
-            panel.AddPushButton<ACEROS_PILOTESCmd>("Aceros\npilotes")
-                .SetLargeImage("/ProyectoNice;component/Resources/Icons/RibbonIcon32.png");
-
-            panel.AddPushButton<InsertFamilyCmd>("Insertar\nfamilias")
-                .SetLargeImage("/ProyectoNice;component/Resources/Icons/RibbonIcon32.png");
-
-            panel.AddPushButton<CoordCompartidasCmd>("Coord.\ncompartidas")
+            panel.AddPushButton<PrincipalCmd>("ProyectoNice")
                 .SetLargeImage("/ProyectoNice;component/Resources/Icons/RibbonIcon32.png");
         }
     }

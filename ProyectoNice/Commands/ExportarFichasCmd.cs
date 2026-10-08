@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -61,11 +61,12 @@ namespace ProyectoNice.Commands
             BuiltInCategory.OST_StructuralStiffener
         };
 
-        public override void Execute()
+        public override void Execute() => Exportar(Document);
+
+        public static void Exportar(Document doc)
         {
             try
             {
-                var doc = Document;
                 if (doc == null)
                 {
                     TaskDialog.Show("Exportar fichas", "No hay ningun modelo abierto.");

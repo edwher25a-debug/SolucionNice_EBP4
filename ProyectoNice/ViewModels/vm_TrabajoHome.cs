@@ -1,18 +1,10 @@
-﻿using Autodesk.Revit.DB.Structure;
-using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Selection;
-using Nice3point.Revit.Extensions.Runtime;
+﻿using Autodesk.Revit.UI.Selection;
 using ProyectoNice.Utils;
-using ProyectoNice.Views;
 using System.Text;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.Structure;
-using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Selection;
 
 namespace ProyectoNice.ViewModels
 {
-    public sealed class vm_TrabajoHome : ObservableObject
+    public sealed class vm_TrabajoHome : vm_Herramienta
     {
         //Datos de entrada
         public Document doc;
@@ -23,9 +15,6 @@ namespace ProyectoNice.ViewModels
         public Category CategoriasSeleccCB { get; set; }
         //Botones
         public RelayCommand AceptarBT { get; set; }
-        public RelayCommand CancelarBT { get; set; }
-        //Propiedad:View
-        public v_TrabajoHome v_TrabajoHome { get; set; }
         //Constructor
         public vm_TrabajoHome(Document doc,Selection seleccion)
         {
@@ -40,17 +29,10 @@ namespace ProyectoNice.ViewModels
             ListaCagoriasCB = doc.Settings.Categories. Cast<Category>().OrderBy(x => x.Name).ToList();
             CategoriasSeleccCB = ListaCagoriasCB.FirstOrDefault();
             //Accion del Boton
-            AceptarBT = new RelayCommand(Aceptar);
-            CancelarBT = new RelayCommand(Cancelar);
-        }
-        public void Cancelar()
-        {
-            //Cerrar Ventana
-            v_TrabajoHome.Close();
+            AceptarBT = new RelayCommand(() => Ejecutar(Aceptar));
         }
         public void Aceptar()
         {
-            v_TrabajoHome.Close();
             //obtener elementos que estan en la categoria seleccionada con los ID
             var ElementosCategorias = new FilteredElementCollector(doc).OfCategoryId(CategoriasSeleccCB.Id).WhereElementIsNotElementType().ToList();
 

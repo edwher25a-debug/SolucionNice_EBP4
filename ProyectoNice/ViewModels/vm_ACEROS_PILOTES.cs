@@ -2,11 +2,10 @@
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using ProyectoNice.Utils;
-using ProyectoNice.Views;
 
 namespace ProyectoNice.ViewModels
 {
-    public sealed class vm_ACEROS_PILOTES : ObservableObject
+    public sealed class vm_ACEROS_PILOTES : vm_Herramienta
     {
         //Datos de entrada
         public Document doc;
@@ -35,10 +34,6 @@ namespace ProyectoNice.ViewModels
 
         //Botones
         public RelayCommand AceptarBT { get; set; }
-        public RelayCommand CancelarBT { get; set; }
-
-        //Propiedad:View
-        public v_ACEROS_PILOTES v_ACEROS_PILOTES { get; set; }
 
         //Constructor
         public vm_ACEROS_PILOTES(Document doc, Selection seleccion)
@@ -57,23 +52,27 @@ namespace ProyectoNice.ViewModels
             EstriboSeleccCB = ListaBarrasCB.FirstOrDefault();
 
             //Accion del Boton
-            AceptarBT = new RelayCommand(Aceptar);
-            CancelarBT = new RelayCommand(Cancelar);
+            AceptarBT = new RelayCommand(Validar);
         }
 
-        public void Cancelar()
+        public void Validar()
         {
-            //Cerrar Ventana
-            v_ACEROS_PILOTES.Close();
+            if (BarraSeleccCB == null || NumeroBarras < 1)
+            {
+                Aviso("Aceros pilotes: elija un tipo de barra y al menos una barra.");
+                return;
+            }
+            if (CrearEstribos && (EstriboSeleccCB == null || SeparacionEstribosCm <= 0 || TraslapoEstribosCm < 0))
+            {
+                Aviso("Aceros pilotes: revise el tipo, la separacion y el traslapo de los flejes.");
+                return;
+            }
+
+            Ejecutar(Aceptar);
         }
 
         public void Aceptar()
         {
-            v_ACEROS_PILOTES.Close();
-
-            if (BarraSeleccCB == null || NumeroBarras < 1) return;
-            if (CrearEstribos && (EstriboSeleccCB == null || SeparacionEstribosCm <= 0 || TraslapoEstribosCm < 0)) return;
-
             //01_Seleccionar cara superior del pilote
             Reference referencia;
             try
@@ -82,13 +81,14 @@ namespace ProyectoNice.ViewModels
             }
             catch (Autodesk.Revit.Exceptions.OperationCanceledException)
             {
+                Aviso("Aceros pilotes: seleccion cancelada.");
                 return;
             }
 
             Element pilote = doc.GetElement(referencia);
             if (!RebarHostData.IsValidHost(pilote))
             {
-                TaskDialog.Show("Aceros Pilotes", "El elemento seleccionado no admite armadura.");
+                Aviso("Aceros pilotes: el elemento seleccionado no admite armadura.");
                 return;
             }
 

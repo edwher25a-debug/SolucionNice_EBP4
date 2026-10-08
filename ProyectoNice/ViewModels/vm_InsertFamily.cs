@@ -1,10 +1,9 @@
 ﻿using Autodesk.Revit.DB.Structure;
 using Autodesk.Revit.UI.Selection;
-using ProyectoNice.Views;
 
 namespace ProyectoNice.ViewModels
 {
-    public sealed class vm_InsertFamily : ObservableObject
+    public sealed class vm_InsertFamily : vm_Herramienta
     {
         //Datos de entrada
         public Document doc;
@@ -68,10 +67,6 @@ namespace ProyectoNice.ViewModels
 
         //Botones
         public RelayCommand AceptarBT { get; set; }
-        public RelayCommand CancelarBT { get; set; }
-
-        //Propiedad:View
-        public v_InsertFamily v_InsertFamily { get; set; }
 
         //Constructor
         public vm_InsertFamily(Document doc, Selection seleccion)
@@ -98,24 +93,24 @@ namespace ProyectoNice.ViewModels
             CategoriaSeleccCB = ListaCategoriasCB.FirstOrDefault();
 
             //Accion del Boton
-            AceptarBT = new RelayCommand(Aceptar);
-            CancelarBT = new RelayCommand(Cancelar);
+            AceptarBT = new RelayCommand(Validar);
         }
 
-        public void Cancelar()
+        public void Validar()
         {
-            //Cerrar Ventana
-            v_InsertFamily.Close();
+            if (TipoSeleccCB == null ||
+                (NivelSeleccCB == null && !AdaptiveComponentFamilyUtils.IsAdaptiveComponentFamily(TipoSeleccCB.Family)))
+            {
+                Aviso("Insertar entre puntos: elija un tipo y un nivel.");
+                return;
+            }
+
+            Ejecutar(Aceptar);
         }
 
         public void Aceptar()
         {
-            v_InsertFamily.Close();
-
-            if (TipoSeleccCB == null) return;
-
             bool esAdaptativa = AdaptiveComponentFamilyUtils.IsAdaptiveComponentFamily(TipoSeleccCB.Family);
-            if (!esAdaptativa && NivelSeleccCB == null) return;
 
             //01_Seleccionar familias en orden y guardar sus puntos de insercion
             var puntos = new List<XYZ>();

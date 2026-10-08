@@ -4,11 +4,10 @@ using System.IO;
 using Autodesk.Revit.DB.Structure;
 using Microsoft.Win32;
 using ProyectoNice.Models;
-using ProyectoNice.Views;
 
 namespace ProyectoNice.ViewModels
 {
-    public sealed class vm_CoordCompartidas : ObservableObject
+    public sealed class vm_CoordCompartidas : vm_Herramienta
     {
         //Datos de entrada
         public Document doc;
@@ -75,10 +74,6 @@ namespace ProyectoNice.ViewModels
         //Botones
         public RelayCommand ImportarBT { get; set; }
         public RelayCommand AceptarBT { get; set; }
-        public RelayCommand CancelarBT { get; set; }
-
-        //Propiedad:View
-        public v_CoordCompartidas v_CoordCompartidas { get; set; }
 
         //Constructor
         public vm_CoordCompartidas(Document doc)
@@ -108,14 +103,7 @@ namespace ProyectoNice.ViewModels
 
             //Accion del Boton
             ImportarBT = new RelayCommand(Importar);
-            AceptarBT = new RelayCommand(Aceptar);
-            CancelarBT = new RelayCommand(Cancelar);
-        }
-
-        public void Cancelar()
-        {
-            //Cerrar Ventana
-            v_CoordCompartidas.Close();
+            AceptarBT = new RelayCommand(Validar);
         }
 
         public void Importar()
@@ -136,14 +124,23 @@ namespace ProyectoNice.ViewModels
                 if (LeerNumero(c[1], out double este) && LeerNumero(c[2], out double norte) && LeerNumero(c[3], out double elevacion))
                     Puntos.Add(new m_PuntoCompartido { Nombre = c[0].Trim(), Este = este, Norte = norte, Elevacion = elevacion });
             }
+
+            Aviso($"Colocar por coordenadas: {Puntos.Count} puntos en la tabla.");
+        }
+
+        public void Validar()
+        {
+            if (TipoSeleccCB == null || NivelSeleccCB == null || Puntos.Count == 0)
+            {
+                Aviso("Colocar por coordenadas: elija tipo y nivel, e ingrese al menos un punto.");
+                return;
+            }
+
+            Ejecutar(Aceptar);
         }
 
         public void Aceptar()
         {
-            v_CoordCompartidas.Close();
-
-            if (TipoSeleccCB == null || NivelSeleccCB == null || Puntos.Count == 0) return;
-
             //01_Transformacion compartidas -> internas
             ProjectPosition origen = doc.ActiveProjectLocation.GetProjectPosition(XYZ.Zero);
             Transform internaACompartida = Transform.CreateTranslation(new XYZ(origen.EastWest, origen.NorthSouth, origen.Elevation))
@@ -173,6 +170,8 @@ namespace ProyectoNice.ViewModels
 
                 transaccion.Commit();
             }
+
+            Aviso($"Colocar por coordenadas: {Puntos.Count} familias colocadas.");
         }
 
         private static bool LeerNumero(string texto, out double valor) =>

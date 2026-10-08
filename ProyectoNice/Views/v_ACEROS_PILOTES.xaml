@@ -1,64 +1,60 @@
-﻿<Window x:Class="ProyectoNice.Views.v_ACEROS_PILOTES"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:ProyectoNice.Views"
-        mc:Ignorable="d"
-        Title="SCRIPT:Aceros Pilotes" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
-    <DockPanel Margin="10">
+<UserControl x:Class="ProyectoNice.Views.v_ACEROS_PILOTES"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Margin="2" Background="#FF143042" Foreground="White" Padding="6" Command="{Binding AceptarBT}">Seleccionar cara</Button>
-            <Button Margin="2" Background="#FF143042" Foreground="White" Padding="6" Command="{Binding CancelarBT}">Cancelar</Button>
+            <Button Command="{Binding AceptarBT}">Seleccionar cara</Button>
         </StackPanel>
-        <GroupBox DockPanel.Dock="Top" Margin="2" Header="Refuerzo longitudinal" BorderBrush="#FF20292F">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="170"/>
-                    <ColumnDefinition Width="150"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <TextBlock Margin="4">Tipo de barra</TextBlock>
-                <TextBlock Margin="4" Grid.Row="1">Numero de barras</TextBlock>
-                <TextBlock Margin="4" Grid.Row="2">Recubrimiento (cm)</TextBlock>
-                <TextBlock Margin="4" Grid.Row="3">Longitud sobre cara (m)</TextBlock>
-                <TextBlock Margin="4" Grid.Row="4">Longitud bajo cara (m)</TextBlock>
+        <StackPanel>
+            <GroupBox Header="Refuerzo longitudinal">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="240"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock VerticalAlignment="Center">Tipo de barra</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="1">Numero de barras</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="2">Recubrimiento (cm)</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="3">Longitud sobre cara (m)</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="4">Longitud bajo cara (m)</TextBlock>
 
-                <ComboBox Grid.Column="1" Margin="2" ItemsSource="{Binding ListaBarrasCB}" SelectedItem="{Binding BarraSeleccCB}" DisplayMemberPath="Name"/>
-                <TextBox Grid.Row="1" Grid.Column="1" Margin="2" Text="{Binding NumeroBarras}"/>
-                <TextBox Grid.Row="2" Grid.Column="1" Margin="2" Text="{Binding RecubrimientoCm}"/>
-                <TextBox Grid.Row="3" Grid.Column="1" Margin="2" Text="{Binding LongitudSobreCaraM}"/>
-                <TextBox Grid.Row="4" Grid.Column="1" Margin="2" Text="{Binding LongitudBajoCaraM}"/>
-            </Grid>
-        </GroupBox>
-        <GroupBox DockPanel.Dock="Top" Margin="2" BorderBrush="#FF20292F">
-            <GroupBox.Header>
-                <CheckBox IsChecked="{Binding CrearEstribos}">Refuerzo transversal</CheckBox>
-            </GroupBox.Header>
-            <Grid IsEnabled="{Binding CrearEstribos}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="170"/>
-                    <ColumnDefinition Width="150"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <TextBlock Margin="4">Tipo de barra</TextBlock>
-                <TextBlock Margin="4" Grid.Row="1">Separacion (cm)</TextBlock>
-                <TextBlock Margin="4" Grid.Row="2">Traslapo (cm)</TextBlock>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding ListaBarrasCB}" SelectedItem="{Binding BarraSeleccCB}" DisplayMemberPath="Name"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding NumeroBarras}"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding RecubrimientoCm}"/>
+                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding LongitudSobreCaraM}"/>
+                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding LongitudBajoCaraM}"/>
+                </Grid>
+            </GroupBox>
+            <GroupBox>
+                <GroupBox.Header>
+                    <CheckBox IsChecked="{Binding CrearEstribos}" FontWeight="SemiBold">Refuerzo transversal</CheckBox>
+                </GroupBox.Header>
+                <Grid IsEnabled="{Binding CrearEstribos}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="240"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock VerticalAlignment="Center">Tipo de barra</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="1">Separacion (cm)</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="2">Traslapo (cm)</TextBlock>
 
-                <ComboBox Grid.Column="1" Margin="2" ItemsSource="{Binding ListaBarrasCB}" SelectedItem="{Binding EstriboSeleccCB}" DisplayMemberPath="Name"/>
-                <TextBox Grid.Row="1" Grid.Column="1" Margin="2" Text="{Binding SeparacionEstribosCm}"/>
-                <TextBox Grid.Row="2" Grid.Column="1" Margin="2" Text="{Binding TraslapoEstribosCm}"/>
-            </Grid>
-        </GroupBox>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding ListaBarrasCB}" SelectedItem="{Binding EstriboSeleccCB}" DisplayMemberPath="Name"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SeparacionEstribosCm}"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding TraslapoEstribosCm}"/>
+                </Grid>
+            </GroupBox>
+        </StackPanel>
     </DockPanel>
-</Window>
+</UserControl>

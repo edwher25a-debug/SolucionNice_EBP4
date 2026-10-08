@@ -1,12 +1,8 @@
-﻿using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Selection;
-using Nice3point.Revit.Extensions.Runtime;
-using ProyectoNice.Utils;
-using ProyectoNice.Views;
+﻿using Autodesk.Revit.UI.Selection;
 using System.Text;
 namespace ProyectoNice.ViewModels
 {
-    public sealed class TrabajoFinal : ObservableObject
+    public sealed class TrabajoFinal : vm_Herramienta
     {
         //Datos de entrada
         public Document doc;
@@ -19,9 +15,6 @@ namespace ProyectoNice.ViewModels
         public String CodigoProyect { get; set; }
         //Botones
         public RelayCommand AceptarBT { get; set; }
-        public RelayCommand CancelarBT { get; set; }
-        //Propiedad:View
-        public v_TrabajoFinal v_TrabajoFinal { get; set; }
         //Constructor
         public TrabajoFinal(Document doc,Selection seleccion)
         {
@@ -36,17 +29,19 @@ namespace ProyectoNice.ViewModels
             ListaCagoriasCB = doc.Settings.Categories. Cast<Category>().OrderBy(x => x.Name).ToList();
             CategoriasSeleccCB = ListaCagoriasCB.FirstOrDefault();
             //Accion del Boton
-            AceptarBT = new RelayCommand(Aceptar);
-            CancelarBT = new RelayCommand(Cancelar);
+            AceptarBT = new RelayCommand(Validar);
         }
-        public void Cancelar()
+        public void Validar()
         {
-            //Cerrar Ventana
-            v_TrabajoFinal.Close();
+            if (string.IsNullOrWhiteSpace(CodigoProyect))
+            {
+                Aviso("Codigo BIM: escriba el codigo de proyecto.");
+                return;
+            }
+            Ejecutar(Aceptar);
         }
         public void Aceptar()
         {
-            v_TrabajoFinal.Close();
             //obtener elementos que estan en la categoria seleccionada con los ID
             var ElementosCategorias = new FilteredElementCollector(doc).OfCategoryId(CategoriasSeleccCB.Id).WhereElementIsNotElementType();
             //Enumera las familias
