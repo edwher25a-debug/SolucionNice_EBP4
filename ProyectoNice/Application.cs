@@ -28,6 +28,9 @@ namespace ProyectoNice
 
             panel.AddPushButton<ACEROS_PILOTESCmd>("Aceros\npilotes")
                 .SetLargeImage("/ProyectoNice;component/Resources/Icons/RibbonIcon32.png");
+
+            panel.AddPushButton<InsertFamilyCmd>("Insertar\nfamilias")
+                .SetLargeImage("/ProyectoNice;component/Resources/Icons/RibbonIcon32.png");
         }
     }
 }
