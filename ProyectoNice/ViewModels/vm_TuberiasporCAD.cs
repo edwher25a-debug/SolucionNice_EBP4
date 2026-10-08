@@ -1,15 +1,9 @@
 ﻿using Autodesk.Revit.DB.Plumbing;
 using Autodesk.Revit.UI.Selection;
-using ProyectoNice.Views;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ProyectoNice.ViewModels
 {
-    public sealed class vm_TuberiasporCAD : ObservableObject
+    public sealed class vm_TuberiasporCAD : vm_Herramienta
     {
         //Datos de Entrada
         public Document doc;
@@ -66,10 +60,6 @@ namespace ProyectoNice.ViewModels
         }
         //Relay Command
         public RelayCommand AceptarBT { get; set; }
-        public RelayCommand CancelarCB { get;set; }
-
-        //View
-        public v_TuberiasporCAD v_TuberiasporCAD { get; set; }
 
         //Constructor
         public vm_TuberiasporCAD(Document doc, Selection seleccion)
@@ -106,14 +96,15 @@ namespace ProyectoNice.ViewModels
             LstCapasCB = ObtenerCapas(CADSeleccCB).OrderBy(t => t.Name).ToList();
             CapaSeleccCB = LstCapasCB.FirstOrDefault();
 
-
+            //Accion del Boton (pendiente: crear las tuberias sobre las lineas de la capa)
+            AceptarBT = new RelayCommand(() => Aviso("Tuberias desde CAD: falta la logica para crear las tuberias."));
         }
-        //Cancelar
-        //Aceptar
 
 
         public List<Category> ObtenerCapas(ImportInstance cad)
         {
+            if (cad?.Category == null) return new List<Category>();
+
             CategoryNameMap ListaCategorias = cad.Category.SubCategories;
 
             var ListaCapas = new List<Category>();

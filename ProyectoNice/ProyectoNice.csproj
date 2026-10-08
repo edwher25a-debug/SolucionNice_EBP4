@@ -36,7 +36,8 @@
     <!-- https://github.com/Nice3point/Revit.Build.Tasks -->
     <PropertyGroup>
         <IsRepackable>false</IsRepackable>
-        <DeployRevitAddin>true</DeployRevitAddin>
+        <!-- Solo Debug se copia a la carpeta Addins: Release es para el instalador -->
+        <DeployRevitAddin Condition="$(Configuration.Contains('Debug'))">true</DeployRevitAddin>
     </PropertyGroup>
 
     <ItemGroup>
@@ -55,10 +56,6 @@
     <ItemGroup>
         <Resource Include="Resources\Icons\RibbonIcon16.png" />
         <Resource Include="Resources\Icons\RibbonIcon32.png" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Folder Include="Models" />
     </ItemGroup>
 
 </Project>

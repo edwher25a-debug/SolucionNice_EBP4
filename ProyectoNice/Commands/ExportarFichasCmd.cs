@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -7,7 +7,6 @@ using System.Text;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Nice3point.Revit.Toolkit.External;
 using ProyectoNice.Utils;
 
 namespace ProyectoNice.Commands
@@ -17,9 +16,8 @@ namespace ProyectoNice.Commands
     ///     La salida esta pensada para alimentar un grafo de conocimiento:
     ///     jerarquia, relaciones y decisiones, no un volcado de parametros.
     /// </summary>
-    [UsedImplicitly]
     [Transaction(TransactionMode.Manual)]
-    public class ExportarFichasCmd : ExternalCommand
+    public class ExportarFichasCmd : IExternalCommand
     {
         /// <summary>Tolerancia vertical para considerar que un elemento se apoya en otro (metros).</summary>
         private const double ToleranciaApoyoM = 0.35;
@@ -61,11 +59,16 @@ namespace ProyectoNice.Commands
             BuiltInCategory.OST_StructuralStiffener
         };
 
-        public override void Execute()
+        public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
+        {
+            Exportar(commandData.Application.ActiveUIDocument?.Document);
+            return Result.Succeeded;
+        }
+
+        public static void Exportar(Document doc)
         {
             try
             {
-                var doc = Document;
                 if (doc == null)
                 {
                     TaskDialog.Show("Exportar fichas", "No hay ningun modelo abierto.");

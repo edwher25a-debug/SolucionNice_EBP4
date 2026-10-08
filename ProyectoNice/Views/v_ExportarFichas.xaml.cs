@@ -2,9 +2,9 @@ using System.Windows.Controls;
 
 namespace ProyectoNice.Views
 {
-    public partial class v_ACEROS_PILOTES : UserControl
+    public partial class v_ExportarFichas : UserControl
     {
-        public v_ACEROS_PILOTES()
+        public v_ExportarFichas()
         {
             InitializeComponent();
         }

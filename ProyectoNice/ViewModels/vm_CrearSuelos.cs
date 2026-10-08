@@ -1,11 +1,10 @@
 ﻿using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using ProyectoNice.Utils;
-using ProyectoNice.Views;
 using System.Text;
 namespace ProyectoNice.ViewModels
 {
-    public sealed class vm_CrearSuelos : ObservableObject
+    public sealed class vm_CrearSuelos : vm_Herramienta
     {
         //Datos de entrada
         public Document doc;
@@ -22,10 +21,6 @@ namespace ProyectoNice.ViewModels
 
         //Botones
         public RelayCommand AceptarBT { get; set; }
-        public RelayCommand CancelarBT { get; set; }
-
-        //Propiedad:View
-        public v_CrearSuelos v_CrearSuelos { get; set; }
 
         //Constructor
         public vm_CrearSuelos(Document doc,Selection seleccion)
@@ -51,23 +46,12 @@ namespace ProyectoNice.ViewModels
             TipoSeleccCB = ListaTiposCB.FirstOrDefault();
 
             //Accion del Boton
-            AceptarBT = new RelayCommand(Aceptar);
-            CancelarBT = new RelayCommand(Cancelar);
-
-        }
-
-        public void Cancelar()
-        {
-            //Cerrar Ventana
-            v_CrearSuelos.Close();
+            AceptarBT = new RelayCommand(() => Ejecutar(Aceptar));
 
         }
 
         public void Aceptar()
         {
-
-            v_CrearSuelos.Close();
-
             //Acción
             //01_Recolectar vigas y columnas
             var columnas = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StructuralColumns).WhereElementIsNotElementType().ToElements().ToList();

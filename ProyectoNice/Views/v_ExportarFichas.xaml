@@ -1,0 +1,14 @@
+<UserControl x:Class="ProyectoNice.Views.v_ExportarFichas"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Command="{Binding AceptarBT}">Exportar</Button>
+        </StackPanel>
+        <StackPanel>
+            <GroupBox Header="Salida">
+                <TextBlock TextWrapping="Wrap">Se escribe una ficha .md por elemento y un 00-indice.md en una carpeta junto al modelo (o en Mis documentos\ProyectoNice si el modelo esta en la nube).</TextBlock>
+            </GroupBox>
+        </StackPanel>
+    </DockPanel>
+</UserControl>
