@@ -37,5 +37,25 @@
                 <TextBox Grid.Row="4" Grid.Column="1" Margin="2" Text="{Binding LongitudBajoCaraM}"/>
             </Grid>
         </GroupBox>
+        <GroupBox DockPanel.Dock="Top" Margin="2" BorderBrush="#FF20292F">
+            <GroupBox.Header>
+                <CheckBox IsChecked="{Binding CrearEstribos}">Refuerzo transversal</CheckBox>
+            </GroupBox.Header>
+            <Grid IsEnabled="{Binding CrearEstribos}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="170"/>
+                    <ColumnDefinition Width="150"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock Margin="4">Tipo de barra</TextBlock>
+                <TextBlock Margin="4" Grid.Row="1">Separacion (cm)</TextBlock>
+
+                <ComboBox Grid.Column="1" Margin="2" ItemsSource="{Binding ListaBarrasCB}" SelectedItem="{Binding EstriboSeleccCB}" DisplayMemberPath="Name"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Margin="2" Text="{Binding SeparacionEstribosCm}"/>
+            </Grid>
+        </GroupBox>
     </DockPanel>
 </Window>

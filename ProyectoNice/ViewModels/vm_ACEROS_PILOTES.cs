@@ -22,6 +22,16 @@ namespace ProyectoNice.ViewModels
         public double LongitudSobreCaraM { get; set; } = 1.0;
         public double LongitudBajoCaraM { get; set; } = 1.0;
 
+        //Refuerzo transversal (estribos circulares)
+        private bool crearEstribos = true;
+        public bool CrearEstribos
+        {
+            get => crearEstribos;
+            set => SetProperty(ref crearEstribos, value);
+        }
+        public RebarBarType EstriboSeleccCB { get; set; }
+        public double SeparacionEstribosCm { get; set; } = 15;
+
         //Botones
         public RelayCommand AceptarBT { get; set; }
         public RelayCommand CancelarBT { get; set; }
@@ -43,6 +53,7 @@ namespace ProyectoNice.ViewModels
             //Tipos de barra
             ListaBarrasCB = new FilteredElementCollector(doc).OfClass(typeof(RebarBarType)).Cast<RebarBarType>().OrderBy(x => x.Name).ToList();
             BarraSeleccCB = ListaBarrasCB.FirstOrDefault();
+            EstriboSeleccCB = ListaBarrasCB.FirstOrDefault();
 
             //Accion del Boton
             AceptarBT = new RelayCommand(Aceptar);
@@ -60,6 +71,7 @@ namespace ProyectoNice.ViewModels
             v_ACEROS_PILOTES.Close();
 
             if (BarraSeleccCB == null || NumeroBarras < 1) return;
+            if (CrearEstribos && (EstriboSeleccCB == null || SeparacionEstribosCm <= 0)) return;
 
             //01_Seleccionar cara superior del pilote
             Reference referencia;
@@ -98,7 +110,11 @@ namespace ProyectoNice.ViewModels
             double hSobre = UnitUtils.ConvertToInternalUnits(LongitudSobreCaraM, UnitTypeId.Meters);
             double hBajo = UnitUtils.ConvertToInternalUnits(LongitudBajoCaraM, UnitTypeId.Meters);
 
-            double radioBarras = radioCara - recubrimiento - db / 2;
+            double dbEstribo = CrearEstribos ? EstriboSeleccCB.BarModelDiameter : 0;
+            double separacion = UnitUtils.ConvertToInternalUnits(SeparacionEstribosCm, UnitTypeId.Centimeters);
+
+            double radioEstribo = radioCara - recubrimiento - dbEstribo / 2;
+            double radioBarras = radioCara - recubrimiento - dbEstribo - db / 2;
             double radioPunta = Math.Max(NumeroBarras * db / (2 * Math.PI), db);
 
             //04_Crear barras
@@ -120,6 +136,27 @@ namespace ProyectoNice.ViewModels
                     Rebar.CreateFromCurves(doc, RebarStyle.Standard, BarraSeleccCB, null, null, pilote,
                         normal.CrossProduct(dir), curvas,
                         RebarHookOrientation.Left, RebarHookOrientation.Left, true, true);
+                }
+
+                //05_Crear estribos: un anillo en la base y arreglo a lo largo del eje del pilote
+                if (CrearEstribos)
+                {
+                    double zIni = -hBajo + dbEstribo;
+                    double zFin = hSobre - BarraSeleccCB.StandardBendDiameter / 2 - db - dbEstribo / 2;
+                    XYZ c0 = centro + normal * zIni;
+
+                    var anillo = new List<Curve>
+                    {
+                        Arc.Create(c0, radioEstribo, 0, Math.PI, ejeU, ejeV),
+                        Arc.Create(c0, radioEstribo, Math.PI, 2 * Math.PI, ejeU, ejeV)
+                    };
+
+                    Rebar estribo = Rebar.CreateFromCurves(doc, RebarStyle.StirrupTie, EstriboSeleccCB, null, null, pilote,
+                        normal, anillo,
+                        RebarHookOrientation.Left, RebarHookOrientation.Left, true, true);
+
+                    if (zFin - zIni > separacion)
+                        estribo.GetShapeDrivenAccessor().SetLayoutAsMaximumSpacing(separacion, zFin - zIni, true, true, true);
                 }
 
                 transaccion.Commit();
