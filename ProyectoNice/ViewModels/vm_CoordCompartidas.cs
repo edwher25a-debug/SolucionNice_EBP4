@@ -124,7 +124,10 @@ namespace ProyectoNice.ViewModels
             var dialogo = new OpenFileDialog { Filter = "Coordenadas (*.csv;*.txt)|*.csv;*.txt" };
             if (dialogo.ShowDialog() != true) return;
 
-            foreach (string linea in File.ReadAllLines(dialogo.FileName))
+            //Lectura compartida: permite importar aunque el archivo este abierto en Excel
+            using var lector = new StreamReader(new FileStream(dialogo.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+            string linea;
+            while ((linea = lector.ReadLine()) != null)
             {
                 char separador = linea.Contains(";") ? ';' : linea.Contains("\t") ? '\t' : ',';
                 string[] c = linea.Split(separador);
