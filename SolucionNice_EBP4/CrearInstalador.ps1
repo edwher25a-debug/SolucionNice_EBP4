@@ -11,7 +11,8 @@ if (Test-Path $staging) { Remove-Item $staging -Recurse -Force }
 
 $carpetas = foreach ($v in $versiones.Keys | Sort-Object) {
     # 01_Compilar el add-in en Release
-    dotnet build "$addin\ProyectoNice.csproj" -c "Release $v"
+    # Out-Host: la salida de dotnet se muestra y no se mezcla con la lista de carpetas
+    dotnet build "$addin\ProyectoNice.csproj" -c "Release $v" | Out-Host
     if ($LASTEXITCODE -ne 0) { throw "Fallo la compilacion de Release $v" }
 
     # 02_Carpeta de salida de la compilacion (donde quedo ProyectoNice.dll)
