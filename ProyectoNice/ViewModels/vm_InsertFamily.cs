@@ -123,7 +123,7 @@ namespace ProyectoNice.ViewModels
             {
                 try
                 {
-                    string rol = puntos.Count % 2 == 0 ? "INICIO" : "FIN";
+                    string rol = puntos.Count == 0 ? "INICIO" : "FIN / INICIO siguiente";
                     Reference referencia = seleccion.PickObject(ObjectType.Element, new FiltroFamiliaPunto(),
                         $"Punto {puntos.Count + 1} ({rol}) - Esc para terminar");
                     puntos.Add(((LocationPoint)doc.GetElement(referencia).Location).Point);
@@ -134,7 +134,7 @@ namespace ProyectoNice.ViewModels
                 }
             }
 
-            //02_Crear familia de dos puntos: INICIO - FIN / INICIO - FIN ...
+            //02_Crear familia de dos puntos en cadena: cada FIN es el INICIO del siguiente tramo
             StructuralType tipoEstructural = TipoSeleccCB.Family.FamilyPlacementType == FamilyPlacementType.CurveDrivenStructural
                 ? StructuralType.Beam
                 : StructuralType.NonStructural;
@@ -145,7 +145,7 @@ namespace ProyectoNice.ViewModels
 
                 if (!TipoSeleccCB.IsActive) TipoSeleccCB.Activate();
 
-                for (int i = 0; i + 1 < puntos.Count; i += 2)
+                for (int i = 0; i + 1 < puntos.Count; i++)
                 {
                     if (puntos[i].DistanceTo(puntos[i + 1]) < doc.Application.ShortCurveTolerance) continue;
 
