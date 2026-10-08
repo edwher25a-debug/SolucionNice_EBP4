@@ -14,9 +14,9 @@ using System.Windows.Shapes;
 
 namespace ProyectoNice.Views
 {
-    public partial class v_ACEROS_PILOTES : Window
+    public partial class v_InsertFamily : Window
     {
-        public v_ACEROS_PILOTES()
+        public v_InsertFamily()
         {
             InitializeComponent();
         }

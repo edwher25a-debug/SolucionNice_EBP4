@@ -5,59 +5,37 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProyectoNice.Views"
         mc:Ignorable="d"
-        Title="SCRIPT:InsertFamily" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+        Title="SCRIPT:Insertar Familias" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
     <DockPanel Margin="10">
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Margin="2" Background="#FF143042" Foreground="White" Padding="6" Command="{Binding AceptarBT}">Seleccionar cara</Button>
+            <Button Margin="2" Background="#FF143042" Foreground="White" Padding="6" Command="{Binding AceptarBT}">Seleccionar familias</Button>
             <Button Margin="2" Background="#FF143042" Foreground="White" Padding="6" Command="{Binding CancelarBT}">Cancelar</Button>
         </StackPanel>
-        <GroupBox DockPanel.Dock="Top" Margin="2" Header="Refuerzo longitudinal" BorderBrush="#FF20292F">
+        <GroupBox DockPanel.Dock="Top" Margin="2" Header="Familia de dos puntos" BorderBrush="#FF20292F">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="170"/>
-                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="260"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
                 </Grid.RowDefinitions>
-                <TextBlock Margin="4">Tipo de barra</TextBlock>
-                <TextBlock Margin="4" Grid.Row="1">Numero de barras</TextBlock>
-                <TextBlock Margin="4" Grid.Row="2">Recubrimiento (cm)</TextBlock>
-                <TextBlock Margin="4" Grid.Row="3">Longitud sobre cara (m)</TextBlock>
-                <TextBlock Margin="4" Grid.Row="4">Longitud bajo cara (m)</TextBlock>
+                <TextBlock Margin="4">Familia</TextBlock>
+                <TextBlock Margin="4" Grid.Row="1">Nivel</TextBlock>
 
-                <ComboBox Grid.Column="1" Margin="2" ItemsSource="{Binding ListaBarrasCB}" SelectedItem="{Binding BarraSeleccCB}" DisplayMemberPath="Name"/>
-                <TextBox Grid.Row="1" Grid.Column="1" Margin="2" Text="{Binding NumeroBarras}"/>
-                <TextBox Grid.Row="2" Grid.Column="1" Margin="2" Text="{Binding RecubrimientoCm}"/>
-                <TextBox Grid.Row="3" Grid.Column="1" Margin="2" Text="{Binding LongitudSobreCaraM}"/>
-                <TextBox Grid.Row="4" Grid.Column="1" Margin="2" Text="{Binding LongitudBajoCaraM}"/>
-            </Grid>
-        </GroupBox>
-        <GroupBox DockPanel.Dock="Top" Margin="2" BorderBrush="#FF20292F">
-            <GroupBox.Header>
-                <CheckBox IsChecked="{Binding CrearEstribos}">Refuerzo transversal</CheckBox>
-            </GroupBox.Header>
-            <Grid IsEnabled="{Binding CrearEstribos}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="170"/>
-                    <ColumnDefinition Width="150"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <TextBlock Margin="4">Tipo de barra</TextBlock>
-                <TextBlock Margin="4" Grid.Row="1">Separacion (cm)</TextBlock>
-                <TextBlock Margin="4" Grid.Row="2">Traslapo (cm)</TextBlock>
-
-                <ComboBox Grid.Column="1" Margin="2" ItemsSource="{Binding ListaBarrasCB}" SelectedItem="{Binding EstriboSeleccCB}" DisplayMemberPath="Name"/>
-                <TextBox Grid.Row="1" Grid.Column="1" Margin="2" Text="{Binding SeparacionEstribosCm}"/>
-                <TextBox Grid.Row="2" Grid.Column="1" Margin="2" Text="{Binding TraslapoEstribosCm}"/>
+                <ComboBox Grid.Column="1" Margin="2" ItemsSource="{Binding ListaFamiliasCB}" SelectedItem="{Binding FamiliaSeleccCB}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding FamilyName, Mode=OneWay}"/>
+                                <Run Text=": "/>
+                                <Run Text="{Binding Name, Mode=OneWay}"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <ComboBox Grid.Row="1" Grid.Column="1" Margin="2" ItemsSource="{Binding ListaNivelesCB}" SelectedItem="{Binding NivelSeleccCB}" DisplayMemberPath="Name"/>
             </Grid>
         </GroupBox>
     </DockPanel>
