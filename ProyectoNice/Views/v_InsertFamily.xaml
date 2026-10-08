@@ -20,22 +20,18 @@
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
-                <TextBlock Margin="4">Familia</TextBlock>
-                <TextBlock Margin="4" Grid.Row="1">Nivel</TextBlock>
+                <TextBlock Margin="4">Categoria</TextBlock>
+                <TextBlock Margin="4" Grid.Row="1">Familia</TextBlock>
+                <TextBlock Margin="4" Grid.Row="2">Tipo</TextBlock>
+                <TextBlock Margin="4" Grid.Row="3">Nivel</TextBlock>
 
-                <ComboBox Grid.Column="1" Margin="2" ItemsSource="{Binding ListaFamiliasCB}" SelectedItem="{Binding FamiliaSeleccCB}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock>
-                                <Run Text="{Binding FamilyName, Mode=OneWay}"/>
-                                <Run Text=": "/>
-                                <Run Text="{Binding Name, Mode=OneWay}"/>
-                            </TextBlock>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                <ComboBox Grid.Row="1" Grid.Column="1" Margin="2" ItemsSource="{Binding ListaNivelesCB}" SelectedItem="{Binding NivelSeleccCB}" DisplayMemberPath="Name"/>
+                <ComboBox Grid.Column="1" Margin="2" ItemsSource="{Binding ListaCategoriasCB}" SelectedItem="{Binding CategoriaSeleccCB}" DisplayMemberPath="Name"/>
+                <ComboBox Grid.Row="1" Grid.Column="1" Margin="2" ItemsSource="{Binding ListaFamiliasCB}" SelectedItem="{Binding FamiliaSeleccCB}" DisplayMemberPath="Name"/>
+                <ComboBox Grid.Row="2" Grid.Column="1" Margin="2" ItemsSource="{Binding ListaTiposCB}" SelectedItem="{Binding TipoSeleccCB}" DisplayMemberPath="Name"/>
+                <ComboBox Grid.Row="3" Grid.Column="1" Margin="2" ItemsSource="{Binding ListaNivelesCB}" SelectedItem="{Binding NivelSeleccCB}" DisplayMemberPath="Name"/>
             </Grid>
         </GroupBox>
     </DockPanel>

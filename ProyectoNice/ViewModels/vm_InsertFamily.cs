@@ -10,11 +10,59 @@ namespace ProyectoNice.ViewModels
         public Document doc;
         public Selection seleccion;
 
-        //Familias de dos puntos (basadas en linea y vigas)
-        public List<FamilySymbol> ListaFamiliasCB { get; set; }
-        public FamilySymbol FamiliaSeleccCB { get; set; }
+        //Tipos de dos puntos: basadas en linea, vigas y adaptativas de 2 puntos
+        private List<FamilySymbol> tiposDosPuntos;
 
-        //Niveles
+        //Categorias
+        public List<Category> ListaCategoriasCB { get; set; }
+        private Category categoriaSeleccCB;
+        public Category CategoriaSeleccCB
+        {
+            get => categoriaSeleccCB;
+            set
+            {
+                if (!SetProperty(ref categoriaSeleccCB, value)) return;
+                ListaFamiliasCB = tiposDosPuntos.Where(t => t.Category.Id == value?.Id)
+                    .Select(t => t.Family).GroupBy(f => f.Id).Select(g => g.First())
+                    .OrderBy(f => f.Name).ToList();
+                FamiliaSeleccCB = ListaFamiliasCB.FirstOrDefault();
+            }
+        }
+
+        //Familias
+        private List<Family> listaFamiliasCB = new List<Family>();
+        public List<Family> ListaFamiliasCB
+        {
+            get => listaFamiliasCB;
+            set => SetProperty(ref listaFamiliasCB, value);
+        }
+        private Family familiaSeleccCB;
+        public Family FamiliaSeleccCB
+        {
+            get => familiaSeleccCB;
+            set
+            {
+                if (!SetProperty(ref familiaSeleccCB, value)) return;
+                ListaTiposCB = tiposDosPuntos.Where(t => t.Family.Id == value?.Id).OrderBy(t => t.Name).ToList();
+                TipoSeleccCB = ListaTiposCB.FirstOrDefault();
+            }
+        }
+
+        //Tipos
+        private List<FamilySymbol> listaTiposCB = new List<FamilySymbol>();
+        public List<FamilySymbol> ListaTiposCB
+        {
+            get => listaTiposCB;
+            set => SetProperty(ref listaTiposCB, value);
+        }
+        private FamilySymbol tipoSeleccCB;
+        public FamilySymbol TipoSeleccCB
+        {
+            get => tipoSeleccCB;
+            set => SetProperty(ref tipoSeleccCB, value);
+        }
+
+        //Niveles (familias basadas en linea y vigas)
         public List<Level> ListaNivelesCB { get; set; }
         public Level NivelSeleccCB { get; set; }
 
@@ -36,16 +84,18 @@ namespace ProyectoNice.ViewModels
 
         public void ObtenerPreData()
         {
-            //Familias de dos puntos
-            ListaFamiliasCB = new FilteredElementCollector(doc).OfClass(typeof(FamilySymbol)).Cast<FamilySymbol>()
-                .Where(fs => fs.Family.FamilyPlacementType == FamilyPlacementType.CurveBased ||
-                             fs.Family.FamilyPlacementType == FamilyPlacementType.CurveDrivenStructural)
-                .OrderBy(fs => fs.FamilyName).ThenBy(fs => fs.Name).ToList();
-            FamiliaSeleccCB = ListaFamiliasCB.FirstOrDefault();
+            //Tipos de dos puntos
+            tiposDosPuntos = new FilteredElementCollector(doc).OfClass(typeof(FamilySymbol)).Cast<FamilySymbol>()
+                .Where(t => t.Category != null && EsDosPuntos(t.Family)).ToList();
 
             //Niveles
             ListaNivelesCB = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(x => x.Elevation).ToList();
             NivelSeleccCB = ListaNivelesCB.FirstOrDefault();
+
+            //Categorias (dispara la carga de familias y tipos)
+            ListaCategoriasCB = tiposDosPuntos.Select(t => t.Category).GroupBy(c => c.Id).Select(g => g.First())
+                .OrderBy(c => c.Name).ToList();
+            CategoriaSeleccCB = ListaCategoriasCB.FirstOrDefault();
 
             //Accion del Boton
             AceptarBT = new RelayCommand(Aceptar);
@@ -62,7 +112,10 @@ namespace ProyectoNice.ViewModels
         {
             v_InsertFamily.Close();
 
-            if (FamiliaSeleccCB == null || NivelSeleccCB == null) return;
+            if (TipoSeleccCB == null) return;
+
+            bool esAdaptativa = AdaptiveComponentFamilyUtils.IsAdaptiveComponentFamily(TipoSeleccCB.Family);
+            if (!esAdaptativa && NivelSeleccCB == null) return;
 
             //01_Seleccionar familias en orden y guardar sus puntos de insercion
             var puntos = new List<XYZ>();
@@ -82,7 +135,7 @@ namespace ProyectoNice.ViewModels
             }
 
             //02_Crear familia de dos puntos: INICIO - FIN / INICIO - FIN ...
-            StructuralType tipoEstructural = FamiliaSeleccCB.Family.FamilyPlacementType == FamilyPlacementType.CurveDrivenStructural
+            StructuralType tipoEstructural = TipoSeleccCB.Family.FamilyPlacementType == FamilyPlacementType.CurveDrivenStructural
                 ? StructuralType.Beam
                 : StructuralType.NonStructural;
 
@@ -90,19 +143,35 @@ namespace ProyectoNice.ViewModels
             {
                 transaccion.Start();
 
-                if (!FamiliaSeleccCB.IsActive) FamiliaSeleccCB.Activate();
+                if (!TipoSeleccCB.IsActive) TipoSeleccCB.Activate();
 
                 for (int i = 0; i + 1 < puntos.Count; i += 2)
                 {
                     if (puntos[i].DistanceTo(puntos[i + 1]) < doc.Application.ShortCurveTolerance) continue;
 
-                    Line linea = Line.CreateBound(puntos[i], puntos[i + 1]);
-                    doc.Create.NewFamilyInstance(linea, FamiliaSeleccCB, NivelSeleccCB, tipoEstructural);
+                    if (esAdaptativa)
+                    {
+                        FamilyInstance instancia = AdaptiveComponentInstanceUtils.CreateAdaptiveComponentInstance(doc, TipoSeleccCB);
+                        IList<ElementId> ids = AdaptiveComponentInstanceUtils.GetInstancePlacementPointElementRefIds(instancia);
+                        ((ReferencePoint)doc.GetElement(ids[0])).Position = puntos[i];
+                        ((ReferencePoint)doc.GetElement(ids[1])).Position = puntos[i + 1];
+                    }
+                    else
+                    {
+                        Line linea = Line.CreateBound(puntos[i], puntos[i + 1]);
+                        doc.Create.NewFamilyInstance(linea, TipoSeleccCB, NivelSeleccCB, tipoEstructural);
+                    }
                 }
 
                 transaccion.Commit();
             }
         }
+
+        private static bool EsDosPuntos(Family familia) =>
+            familia.FamilyPlacementType == FamilyPlacementType.CurveBased ||
+            familia.FamilyPlacementType == FamilyPlacementType.CurveDrivenStructural ||
+            (AdaptiveComponentFamilyUtils.IsAdaptiveComponentFamily(familia) &&
+             AdaptiveComponentFamilyUtils.GetNumberOfPlacementPoints(familia) == 2);
     }
 
     //Filtro: solo familias con punto de insercion
