@@ -145,11 +145,9 @@ namespace ProyectoNice.ViewModels
                     double zFin = hSobre - BarraSeleccCB.StandardBendDiameter / 2 - db - dbEstribo / 2;
                     XYZ c0 = centro + normal * zIni;
 
-                    var anillo = new List<Curve>
-                    {
-                        Arc.Create(c0, radioEstribo, 0, Math.PI, ejeU, ejeV),
-                        Arc.Create(c0, radioEstribo, Math.PI, 2 * Math.PI, ejeU, ejeV)
-                    };
+                    //Revit no admite anillos cerrados: arco abierto con abertura de 2 diametros
+                    double abertura = 2 * dbEstribo / radioEstribo;
+                    var anillo = new List<Curve> { Arc.Create(c0, radioEstribo, 0, 2 * Math.PI - abertura, ejeU, ejeV) };
 
                     Rebar estribo = Rebar.CreateFromCurves(doc, RebarStyle.StirrupTie, EstriboSeleccCB, null, null, pilote,
                         normal, anillo,
