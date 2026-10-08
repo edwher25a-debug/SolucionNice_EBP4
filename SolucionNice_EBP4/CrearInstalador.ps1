@@ -3,25 +3,38 @@
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
-$proyecto = "..\ProyectoNice\ProyectoNice.csproj"
-$versiones = "R24", "R25", "R26"
+$addin = "..\ProyectoNice"
+$versiones = @{ "R24" = "2024"; "R25" = "2025"; "R26" = "2026" }
+$staging = Join-Path $PSScriptRoot "output\staging"
 
-# 01_Compilar el add-in en Release para cada version
-foreach ($v in $versiones) {
-    dotnet build $proyecto -c "Release $v"
+if (Test-Path $staging) { Remove-Item $staging -Recurse -Force }
+
+$carpetas = foreach ($v in $versiones.Keys | Sort-Object) {
+    # 01_Compilar el add-in en Release
+    dotnet build "$addin\ProyectoNice.csproj" -c "Release $v"
     if ($LASTEXITCODE -ne 0) { throw "Fallo la compilacion de Release $v" }
+
+    # 02_Carpeta de salida de la compilacion (donde quedo ProyectoNice.dll)
+    $dll = Get-ChildItem "$addin\bin\Release $v" -Recurse -Filter "ProyectoNice.dll" |
+        Where-Object { $_.FullName -notmatch "\\publish\\" } | Select-Object -First 1
+    if (-not $dll) { throw "No se encontro ProyectoNice.dll en $addin\bin\Release $v" }
+
+    # 03_Armar la carpeta del instalador: Revit 20xx\ProyectoNice.addin + Revit 20xx\ProyectoNice\*.dll
+    $destino = Join-Path $staging "Revit $($versiones[$v])"
+    New-Item "$destino\ProyectoNice" -ItemType Directory -Force | Out-Null
+    Copy-Item "$addin\ProyectoNice.addin" $destino
+    Get-ChildItem $dll.DirectoryName | Where-Object { $_.Name -ne "publish" -and $_.Extension -ne ".pdb" } |
+        Copy-Item -Destination "$destino\ProyectoNice" -Recurse
+
+    $destino
 }
 
-# 02_Carpetas publicadas por version (bin\Release R2x\publish\Revit 20xx ...)
-$carpetas = foreach ($v in $versiones) {
-    Get-ChildItem "..\ProyectoNice\bin\Release $v\publish" -Directory -Filter "Revit*" | Select-Object -First 1 -ExpandProperty FullName
-}
-
-# 03_Compilar y ejecutar el instalador
+# 04_Compilar y ejecutar el instalador
 dotnet build "install\Installer.csproj" -c Release
 if ($LASTEXITCODE -ne 0) { throw "Fallo la compilacion del instalador" }
 
 & "install\bin\Release\Installer.exe" $carpetas
 if ($LASTEXITCODE -ne 0) { throw "Fallo la generacion de los .msi" }
 
+Remove-Item $staging -Recurse -Force
 Write-Host "Instaladores en: $(Resolve-Path output)"
