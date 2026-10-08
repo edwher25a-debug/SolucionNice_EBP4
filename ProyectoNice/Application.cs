@@ -31,6 +31,9 @@ namespace ProyectoNice
 
             panel.AddPushButton<InsertFamilyCmd>("Insertar\nfamilias")
                 .SetLargeImage("/ProyectoNice;component/Resources/Icons/RibbonIcon32.png");
+
+            panel.AddPushButton<CoordCompartidasCmd>("Coord.\ncompartidas")
+                .SetLargeImage("/ProyectoNice;component/Resources/Icons/RibbonIcon32.png");
         }
     }
 }
