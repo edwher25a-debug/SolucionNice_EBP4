@@ -31,6 +31,7 @@ namespace ProyectoNice.ViewModels
         }
         public RebarBarType EstriboSeleccCB { get; set; }
         public double SeparacionEstribosCm { get; set; } = 15;
+        public double TraslapoEstribosCm { get; set; } = 15;
 
         //Botones
         public RelayCommand AceptarBT { get; set; }
@@ -71,7 +72,7 @@ namespace ProyectoNice.ViewModels
             v_ACEROS_PILOTES.Close();
 
             if (BarraSeleccCB == null || NumeroBarras < 1) return;
-            if (CrearEstribos && (EstriboSeleccCB == null || SeparacionEstribosCm <= 0)) return;
+            if (CrearEstribos && (EstriboSeleccCB == null || SeparacionEstribosCm <= 0 || TraslapoEstribosCm < 0)) return;
 
             //01_Seleccionar cara superior del pilote
             Reference referencia;
@@ -145,11 +146,18 @@ namespace ProyectoNice.ViewModels
                     double zFin = hSobre - BarraSeleccCB.StandardBendDiameter / 2 - db - dbEstribo / 2;
                     XYZ c0 = centro + normal * zIni;
 
-                    //Revit no admite anillos cerrados: arco abierto con abertura de 2 diametros
-                    double abertura = 2 * dbEstribo / radioEstribo;
-                    var anillo = new List<Curve> { Arc.Create(c0, radioEstribo, 0, 2 * Math.PI - abertura, ejeU, ejeV) };
+                    //Fleje: vuelta completa mas traslapo, con ganchos a 135° hacia el nucleo
+                    double traslapo = UnitUtils.ConvertToInternalUnits(TraslapoEstribosCm, UnitTypeId.Centimeters) / radioEstribo;
+                    double a0 = Math.PI / 2 - traslapo / 2;
+                    var anillo = new List<Curve>
+                    {
+                        Arc.Create(c0, radioEstribo, a0, a0 + Math.PI, ejeU, ejeV),
+                        Arc.Create(c0, radioEstribo, a0 + Math.PI, a0 + 2 * Math.PI + traslapo, ejeU, ejeV)
+                    };
 
-                    Rebar estribo = Rebar.CreateFromCurves(doc, RebarStyle.StirrupTie, EstriboSeleccCB, null, null, pilote,
+                    RebarHookType gancho135 = ObtenerGancho135();
+
+                    Rebar estribo = Rebar.CreateFromCurves(doc, RebarStyle.StirrupTie, EstriboSeleccCB, gancho135, gancho135, pilote,
                         normal, anillo,
                         RebarHookOrientation.Left, RebarHookOrientation.Left, true, true);
 
@@ -159,6 +167,17 @@ namespace ProyectoNice.ViewModels
 
                 transaccion.Commit();
             }
+        }
+
+        private RebarHookType ObtenerGancho135()
+        {
+            double angulo = 135 * Math.PI / 180;
+
+            return new FilteredElementCollector(doc).OfClass(typeof(RebarHookType)).Cast<RebarHookType>()
+                .Where(h => Math.Abs(h.HookAngle - angulo) < 0.01)
+                .OrderBy(h => h.Style == RebarStyle.StirrupTie ? 0 : 1)
+                .FirstOrDefault()
+                ?? RebarHookType.Create(doc, angulo, 6);
         }
     }
 

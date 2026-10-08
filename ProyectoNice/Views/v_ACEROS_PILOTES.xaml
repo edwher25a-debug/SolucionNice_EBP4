@@ -49,12 +49,15 @@
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
                 <TextBlock Margin="4">Tipo de barra</TextBlock>
                 <TextBlock Margin="4" Grid.Row="1">Separacion (cm)</TextBlock>
+                <TextBlock Margin="4" Grid.Row="2">Traslapo (cm)</TextBlock>
 
                 <ComboBox Grid.Column="1" Margin="2" ItemsSource="{Binding ListaBarrasCB}" SelectedItem="{Binding EstriboSeleccCB}" DisplayMemberPath="Name"/>
                 <TextBox Grid.Row="1" Grid.Column="1" Margin="2" Text="{Binding SeparacionEstribosCm}"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Margin="2" Text="{Binding TraslapoEstribosCm}"/>
             </Grid>
         </GroupBox>
     </DockPanel>
