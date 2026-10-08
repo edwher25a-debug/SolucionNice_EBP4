@@ -1,5 +1,5 @@
 using Autodesk.Revit.Attributes;
-using Nice3point.Revit.Toolkit.External;
+using Autodesk.Revit.UI;
 using ProyectoNice.ViewModels;
 using ProyectoNice.Views;
 
@@ -8,13 +8,19 @@ namespace ProyectoNice.Commands
     /// <summary>
     ///     Ventana unica con todas las herramientas
     /// </summary>
-    [UsedImplicitly]
     [Transaction(TransactionMode.Manual)]
-    public class PrincipalCmd : ExternalCommand
+    public class PrincipalCmd : IExternalCommand
     {
-        public override void Execute()
+        public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            vm_Principal viewModel = new vm_Principal(Document, UiDocument.Selection);
+            UIDocument uiDocument = commandData.Application.ActiveUIDocument;
+            if (uiDocument == null)
+            {
+                TaskDialog.Show("ProyectoNice", "Abra un proyecto para usar las herramientas.");
+                return Result.Cancelled;
+            }
+
+            vm_Principal viewModel = new vm_Principal(uiDocument.Document, uiDocument.Selection);
 
             //La ventana se cierra para trabajar en Revit y se vuelve a abrir en la misma herramienta
             do
@@ -24,6 +30,8 @@ namespace ProyectoNice.Commands
                 view.ShowDialog();
             }
             while (viewModel.EjecutarPendiente());
+
+            return Result.Succeeded;
         }
     }
 }
