@@ -27,7 +27,7 @@ namespace ProyectoNice.Acotado
                     s.Referencia(cara.Reference),
                     lienzo.VectorAVista(s.AlModelo.OfVector(cara.FaceNormal)),
                     lienzo.AVista(s.AlModelo.OfPoint(cara.Origin)),
-                    () => PuntoParaNivel(lienzo, cara.Triangulate(), s.AlModelo))));
+                    () => CentrosDeTriangulos(lienzo, cara.Triangulate(), s.AlModelo))));
 
                 forma.Cilindros.AddRange(s.Solido.Faces.OfType<CylindricalFace>().Select(cilindro => (
                     lienzo.AVista(s.AlModelo.OfPoint(cilindro.Origin)),
@@ -48,17 +48,13 @@ namespace ProyectoNice.Acotado
             return forma;
         }
 
-        //Centro del triangulo de la cara mas cercano al plano de la vista y, entre esos, el de mas a la izquierda:
-        //un punto que esta dentro de la cara, como exige Revit para colocar un nivel
-        private static XYZ PuntoParaNivel(Lienzo lienzo, Mesh malla, Transform alModelo) =>
+        //Centros de los triangulos de la cara: puntos que estan dentro de ella, en el modelo y en la vista
+        private static List<(XYZ Modelo, XYZ Vista)> CentrosDeTriangulos(Lienzo lienzo, Mesh malla, Transform alModelo) =>
             Enumerable.Range(0, malla.NumTriangles)
                 .Select(malla.get_Triangle)
                 .Select(t => alModelo.OfPoint((t.get_Vertex(0) + t.get_Vertex(1) + t.get_Vertex(2)) / 3))
-                .Select(p => (Modelo: p, Vista: lienzo.AVista(p)))
-                .OrderBy(p => Math.Round(Math.Abs(p.Vista.Z), 2))
-                .ThenBy(p => p.Vista.X)
-                .First()
-                .Modelo;
+                .Select(p => (p, lienzo.AVista(p)))
+                .ToList();
 
         private sealed class SolidoUbicado
         {

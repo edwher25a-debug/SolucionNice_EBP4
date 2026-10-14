@@ -16,22 +16,29 @@ namespace ProyectoNice.Acotado
     /// <summary>Cara plana de un elemento, en coordenadas de la vista, con la referencia que sirve para acotarla.</summary>
     public sealed class CaraPlana
     {
-        private readonly Lazy<XYZ> puntoParaNivel;
+        private readonly Lazy<List<(XYZ Modelo, XYZ Vista)>> centros;
 
-        public CaraPlana(Reference? referencia, XYZ normal, XYZ punto, Func<XYZ> puntoParaNivel)
+        public CaraPlana(Reference? referencia, XYZ normal, XYZ punto, Func<List<(XYZ Modelo, XYZ Vista)>> centrosDeTriangulos)
         {
             Referencia = referencia;
             Normal = normal;
             Punto = punto;
-            this.puntoParaNivel = new Lazy<XYZ>(puntoParaNivel);
+            centros = new Lazy<List<(XYZ Modelo, XYZ Vista)>>(centrosDeTriangulos);
         }
 
         public Reference? Referencia { get; }
         public XYZ Normal { get; }
         public XYZ Punto { get; }
 
-        /// <summary>Punto de la cara, en coordenadas del modelo, donde se coloca su nivel.</summary>
-        public XYZ PuntoParaNivel => puntoParaNivel.Value;
+        /// <summary>
+        ///     Punto de la cara (coordenadas del modelo) donde va su nivel: el centro de un triangulo de la cara,
+        ///     de los mas cercanos al plano de la vista, en el extremo izquierdo o derecho. Revit exige que este dentro de la cara.
+        /// </summary>
+        public XYZ PuntoParaNivel(bool derecha)
+        {
+            IOrderedEnumerable<(XYZ Modelo, XYZ Vista)> cercanos = centros.Value.OrderBy(c => Math.Round(Math.Abs(c.Vista.Z), 2));
+            return (derecha ? cercanos.ThenByDescending(c => c.Vista.X) : cercanos.ThenBy(c => c.Vista.X)).First().Modelo;
+        }
 
         public double En(Eje eje) => Punto.En(eje);
         public bool PerpendicularA(Eje eje) => Math.Abs(Normal.En(eje)) > 0.999;
@@ -41,7 +48,8 @@ namespace ProyectoNice.Acotado
     public sealed class Pieza
     {
         /// <summary>Palabras del nombre de familia o tipo que deciden el papel. Ampliar segun el proyecto.</summary>
-        private static readonly string[] PalabrasPilote = { "PILOTE", "PILE" };
+        private static readonly string[] PalabrasPilote = { "PILOT", "PILE" };
+        private static readonly string[] PalabrasDado = { "DADO", "ZAPATA", "ENCEPADO" };
         private static readonly string[] PalabrasBox = { "BOX" };
         private static readonly string[] PalabrasNoBox = { "PERFIL" };
         private static readonly string[] PalabrasPunto = { "COORD" };
@@ -127,14 +135,9 @@ namespace ProyectoNice.Acotado
                     .Select(posicion => new Estacion(posicion, null)));
         }
 
-        //Familias que solo agrupan otras (CIMENTACION-T1 con dado y pilotes): se acota lo que contienen, no el grupo.
-        //Una familia con geometria propia y componentes anidados, como un espaldar, si se acota
+        //Familias que agrupan otras (CIMENTACION-T1 con dado y pilotes): se acota lo que contienen, no el grupo
         private static bool EsSoloContenedor(Element elemento) =>
-            elemento is FamilyInstance instancia &&
-            instancia.GetSubComponentIds().Count > 0 &&
-            !(instancia.get_Geometry(new Options())?.OfType<GeometryInstance>()
-                .SelectMany(g => g.GetSymbolGeometry().OfType<Solid>())
-                .Any(s => s.Volume > 1e-6) ?? false);
+            elemento is FamilyInstance instancia && instancia.GetSubComponentIds().Count > 0;
 
         private static Rol RolDe(Element elemento)
         {
@@ -147,7 +150,7 @@ namespace ProyectoNice.Acotado
 
             switch (elemento.Category.BuiltInCategory)
             {
-                case BuiltInCategory.OST_StructuralFoundation: return Dice(PalabrasPilote) ? Rol.Pilote : Rol.Dado;
+                case BuiltInCategory.OST_StructuralFoundation: return Dice(PalabrasPilote) ? Rol.Pilote : Dice(PalabrasDado) ? Rol.Dado : Rol.Otro;
                 case BuiltInCategory.OST_StructuralColumns: return Dice(PalabrasPilote) ? Rol.Pilote : Rol.Columna;
                 case BuiltInCategory.OST_StructuralFraming: return Rol.Viga;
                 case BuiltInCategory.OST_StructConnections: return Rol.Apoyo;
