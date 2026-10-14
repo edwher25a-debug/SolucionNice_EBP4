@@ -1,0 +1,59 @@
+<UserControl x:Class="ProyectoNice.Views.v_CotaCurva"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Command="{Binding AceptarBT}">Acotar lineas</Button>
+        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <GroupBox Header="Cota">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="240"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock VerticalAlignment="Center">Lado</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="1">Separacion de la linea (mm en papel)</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="2">Holgura de las referencias (mm)</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="3">Largo de la marca (mm)</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="4">Decimales (metros)</TextBlock>
+
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding ListaLadosCB}" SelectedItem="{Binding LadoSeleccCB}"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SeparacionTB}"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding HolguraTB}"/>
+                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding MarcaTB}"/>
+                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding DecimalesTB}"/>
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="Estilo">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="240"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock VerticalAlignment="Center">Estilo de linea</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="1">Tipo de texto</TextBlock>
+
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding ListaEstilosCB}" SelectedItem="{Binding EstiloSeleccCB}"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding ListaTiposTextoCB}" SelectedItem="{Binding TipoTextoSeleccCB}" DisplayMemberPath="Name"/>
+                    <CheckBox Grid.Row="2" Grid.ColumnSpan="2" Margin="0,6,0,0" IsChecked="{Binding AgruparCK}">Agrupar cada cota para moverla como una sola pieza</CheckBox>
+                </Grid>
+            </GroupBox>
+            <TextBlock Foreground="{DynamicResource TextoSuave}" TextWrapping="Wrap">Use las lineas que tenga seleccionadas o elijalas al pulsar el boton. El valor es la longitud medida sobre la curva. La cota es un dibujo: si la linea cambia, hay que volver a generarla.</TextBlock>
+        </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

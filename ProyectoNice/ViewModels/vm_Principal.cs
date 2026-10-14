@@ -82,6 +82,19 @@ namespace ProyectoNice.ViewModels
                     Descripcion = "Llena el parametro CodigoBIM: PROYECTO-CATEGORIA-ID-CONSECUTIVO.",
                     Crear = () => new TrabajoFinal(doc, seleccion) },
 
+                new m_Herramienta { Grupo = "DOCUMENTACION", Nombre = "Cota en curva",
+                    Descripcion = "Cota dibujada que sigue una linea curva y muestra su longitud medida sobre la curva.",
+                    Crear = () => new vm_CotaCurva(doc, seleccion) },
+                new m_Herramienta { Grupo = "DOCUMENTACION", Nombre = "Corte desarrollado",
+                    Descripcion = "Corte a lo largo de una linea guia curva, desenrollado en una vista de dibujo.",
+                    Crear = () => new vm_CorteDesarrollado(doc, seleccion) },
+                new m_Herramienta { Grupo = "DOCUMENTACION", Nombre = "Acotar vistas",
+                    Descripcion = "Acota plantas, vigas cabezal, columnas, alzados, secciones y boxes segun las reglas del proyecto.",
+                    Crear = () => new vm_AcotarVistas(doc, seleccion) },
+                new m_Herramienta { Grupo = "DOCUMENTACION", Nombre = "Secciones desde lineas",
+                    Descripcion = "Una seccion por cada linea de un estilo: plantilla, cotas de box y colocacion en un plano.",
+                    Crear = () => new vm_SeccionesDesdeLineas(doc, seleccion) },
+
                 new m_Herramienta { Grupo = "EXPORTAR", Nombre = "Fichas para grafo",
                     Descripcion = "Exporta una ficha markdown por elemento coordinable.",
                     Crear = () => new vm_ExportarFichas(doc) }
