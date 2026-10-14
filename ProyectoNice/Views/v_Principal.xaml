@@ -31,6 +31,7 @@
             <DataTemplate DataType="{x:Type vm:vm_SeccionesDesdeLineas}"><local:v_SeccionesDesdeLineas/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:vm_AcotarVistas}"><local:v_AcotarVistas/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:vm_ExportarFichas}"><local:v_ExportarFichas/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:vm_ExportarPlanos}"><local:v_ExportarPlanos/></DataTemplate>
         </ResourceDictionary>
     </Window.Resources>
 
