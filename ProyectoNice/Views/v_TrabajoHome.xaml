@@ -1,4 +1,4 @@
-<UserControl x:Class="ProyectoNice.Views.v_TrabajoHome"
+﻿<UserControl x:Class="ProyectoNice.Views.v_TrabajoHome"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
@@ -6,14 +6,21 @@
             <Button Command="{Binding AceptarBT}">Escribir coordenadas</Button>
         </StackPanel>
         <StackPanel>
-            <GroupBox Header="Seleccion de elementos">
+            <GroupBox Header="Familias visibles en la vista activa">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="180"/>
                         <ColumnDefinition Width="240"/>
                     </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
                     <TextBlock VerticalAlignment="Center">Categoria</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="1">Familia</TextBlock>
+
                     <ComboBox Grid.Column="1" ItemsSource="{Binding ListaCagoriasCB}" SelectedItem="{Binding CategoriasSeleccCB}" DisplayMemberPath="Name"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding ListaFamiliasCB}" SelectedItem="{Binding FamiliaSeleccCB}" DisplayMemberPath="Name"/>
                 </Grid>
             </GroupBox>
         </StackPanel>

@@ -85,11 +85,9 @@ namespace ProyectoNice.ViewModels
 
         public void ObtenerPreData()
         {
-            //Tipos de un punto
+            //Tipos de un punto: basadas en nivel, en plano de trabajo y adaptativas de 1 punto (modelos genericos)
             tiposUnPunto = new FilteredElementCollector(doc).OfClass(typeof(FamilySymbol)).Cast<FamilySymbol>()
-                .Where(t => t.Category != null &&
-                            (t.Family.FamilyPlacementType == FamilyPlacementType.OneLevelBased ||
-                             t.Family.FamilyPlacementType == FamilyPlacementType.WorkPlaneBased))
+                .Where(t => t.Category != null && EsUnPunto(t.Family))
                 .ToList();
 
             //Niveles
@@ -154,6 +152,10 @@ namespace ProyectoNice.ViewModels
 
                 if (!TipoSeleccCB.IsActive) TipoSeleccCB.Activate();
 
+                bool esAdaptativa = AdaptiveComponentFamilyUtils.IsAdaptiveComponentFamily(TipoSeleccCB.Family);
+                bool esPlanoTrabajo = TipoSeleccCB.Family.FamilyPlacementType == FamilyPlacementType.WorkPlaneBased;
+                var planos = new Dictionary<double, SketchPlane>();
+
                 foreach (m_PuntoCompartido p in Puntos)
                 {
                     XYZ compartida = new XYZ(
@@ -161,8 +163,30 @@ namespace ProyectoNice.ViewModels
                         UnitUtils.ConvertToInternalUnits(p.Norte, UnitTypeId.Meters),
                         UnitUtils.ConvertToInternalUnits(p.Elevacion, UnitTypeId.Meters));
 
-                    FamilyInstance instancia = doc.Create.NewFamilyInstance(compartidaAInterna.OfPoint(compartida),
-                        TipoSeleccCB, NivelSeleccCB, StructuralType.NonStructural);
+                    XYZ punto = compartidaAInterna.OfPoint(compartida);
+                    FamilyInstance instancia;
+
+                    if (esAdaptativa)
+                    {
+                        //Adaptativa de 1 punto: se crea y se mueve su punto de colocacion
+                        instancia = AdaptiveComponentInstanceUtils.CreateAdaptiveComponentInstance(doc, TipoSeleccCB);
+                        ElementId id = AdaptiveComponentInstanceUtils.GetInstancePlacementPointElementRefIds(instancia)[0];
+                        ((ReferencePoint)doc.GetElement(id)).Position = punto;
+                    }
+                    else if (esPlanoTrabajo)
+                    {
+                        //Basada en plano de trabajo: plano horizontal a la elevacion del punto
+                        if (!planos.TryGetValue(punto.Z, out SketchPlane plano))
+                        {
+                            plano = SketchPlane.Create(doc, Plane.CreateByNormalAndOrigin(XYZ.BasisZ, punto));
+                            planos[punto.Z] = plano;
+                        }
+                        instancia = doc.Create.NewFamilyInstance(plano.GetPlaneReference(), punto, XYZ.BasisX, TipoSeleccCB);
+                    }
+                    else
+                    {
+                        instancia = doc.Create.NewFamilyInstance(punto, TipoSeleccCB, NivelSeleccCB, StructuralType.NonStructural);
+                    }
 
                     if (!string.IsNullOrEmpty(p.Nombre))
                         instancia.get_Parameter(BuiltInParameter.ALL_MODEL_MARK)?.Set(p.Nombre);
@@ -173,6 +197,12 @@ namespace ProyectoNice.ViewModels
 
             Aviso($"Colocar por coordenadas: {Puntos.Count} familias colocadas.");
         }
+
+        private static bool EsUnPunto(Family familia) =>
+            familia.FamilyPlacementType == FamilyPlacementType.OneLevelBased ||
+            familia.FamilyPlacementType == FamilyPlacementType.WorkPlaneBased ||
+            (AdaptiveComponentFamilyUtils.IsAdaptiveComponentFamily(familia) &&
+             AdaptiveComponentFamilyUtils.GetNumberOfPlacementPoints(familia) == 1);
 
         private static bool LeerNumero(string texto, out double valor) =>
             double.TryParse(texto.Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out valor);
