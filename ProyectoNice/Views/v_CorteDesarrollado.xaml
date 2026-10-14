@@ -1,0 +1,77 @@
+<UserControl x:Class="ProyectoNice.Views.v_CorteDesarrollado"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Command="{Binding AceptarBT}">Seleccionar guia y elementos</Button>
+        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <GroupBox Header="Vista de salida">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="240"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock VerticalAlignment="Center">Nombre</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="1">Escala 1:</TextBlock>
+
+                    <TextBox Grid.Column="1" Text="{Binding NombreTB}"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding EscalaTB}"/>
+                    <CheckBox Grid.Row="2" Grid.ColumnSpan="2" Margin="0,6,0,0" IsChecked="{Binding InvertirCK}">Invertir el sentido (por defecto, de izquierda a derecha de la vista activa)</CheckBox>
+                    <CheckBox Grid.Row="3" Grid.ColumnSpan="2" Margin="0,6,0,0" IsChecked="{Binding AcotarCK}">Acotar longitudes y alturas de los extremos</CheckBox>
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="Corte (metros)">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="240"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock VerticalAlignment="Center">Prolongar antes del inicio</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="1">Prolongar despues del fin</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="2">Desfase lateral (+ a la derecha)</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="4">Desfase del segundo corte</TextBlock>
+
+                    <TextBox Grid.Column="1" Text="{Binding ProlongarInicioTB}"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ProlongarFinTB}"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding DesfaseTB}"/>
+                    <CheckBox Grid.Row="3" Grid.ColumnSpan="2" Margin="0,6,0,0" IsChecked="{Binding SegundoCorteCK}">Dibujar un segundo corte paralelo (lo que se ve mas alla)</CheckBox>
+                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding DesfaseSegundoTB}"/>
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="Estilos de linea">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="240"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock VerticalAlignment="Center">Lineas de corte</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="1">Lineas del segundo corte</TextBlock>
+
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding ListaEstilosCB}" SelectedItem="{Binding EstiloCorteSeleccCB}"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding ListaEstilosCB}" SelectedItem="{Binding EstiloVistoSeleccCB}"/>
+                </Grid>
+            </GroupBox>
+            <TextBlock Foreground="{DynamicResource TextoSuave}" TextWrapping="Wrap">Seleccione una linea guia y despues los elementos a cortar. Se crea una vista de dibujo con el corte desenrollado: el ancho es la longitud medida sobre la guia y el alto es la cota del modelo. Es un dibujo: si el modelo cambia, hay que volver a generarlo.</TextBlock>
+        </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

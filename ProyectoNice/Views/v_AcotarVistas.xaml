@@ -1,0 +1,79 @@
+<UserControl x:Class="ProyectoNice.Views.v_AcotarVistas"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Command="{Binding AceptarBT}">Acotar</Button>
+        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <GroupBox Header="Vistas">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="300"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock VerticalAlignment="Center">Acotar</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="1">Plano</TextBlock>
+
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding ListaAlcancesCB}" SelectedItem="{Binding AlcanceSeleccCB}"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding ListaPlanosCB}" SelectedItem="{Binding PlanoSeleccCB}"/>
+                    <CheckBox Grid.Row="2" Grid.ColumnSpan="2" Margin="0,6,0,0" IsChecked="{Binding OmitirAcotadasCK}">Saltar las vistas que ya tienen cotas</CheckBox>
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="Regla">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="300"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock VerticalAlignment="Center">Tipo de vista</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="1">Primera fila (mm en papel)</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="2">Entre filas (mm en papel)</TextBlock>
+
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding ListaTiposVistaCB}" SelectedItem="{Binding TipoVistaSeleccCB}"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding PrimeraFilaTB}"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding EntreFilasTB}"/>
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="Anotaciones">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="300"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock VerticalAlignment="Center">Tipo de cota</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="1">Tipo de nivel</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="2">Estilo de las marcas de apoyo</TextBlock>
+
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding ListaTiposCotaCB}" SelectedItem="{Binding TipoCotaSeleccCB}"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding ListaTiposNivelCB}" SelectedItem="{Binding TipoNivelSeleccCB}"/>
+                    <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding ListaEstilosCB}" SelectedItem="{Binding EstiloMarcasSeleccCB}"/>
+                    <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,6,0,0">
+                        <CheckBox IsChecked="{Binding NivelesCK}" Margin="0,0,16,0">Niveles</CheckBox>
+                        <CheckBox IsChecked="{Binding EtiquetasCK}" Margin="0,0,16,0">Etiquetas</CheckBox>
+                        <CheckBox IsChecked="{Binding DiametrosCK}">Diametros (Revit 2025 o superior)</CheckBox>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+            <TextBlock Foreground="{DynamicResource TextoSuave}" TextWrapping="Wrap">En automatico, el tipo de vista se reconoce por el prefijo del nombre (00_ planta, 01_ viga cabezal, 02_ seccion de columna, 10_ y 20_ alzado o seccion, VISTA POR) o por lo que muestra; una seccion que corta un box usa la regla de box. Las cotas se enganchan a las caras de los elementos; donde no hay cara, se apoyan en marcas y no se actualizan solas.</TextBlock>
+        </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

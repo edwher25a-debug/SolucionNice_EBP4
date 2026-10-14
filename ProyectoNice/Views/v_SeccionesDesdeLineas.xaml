@@ -1,0 +1,69 @@
+<UserControl x:Class="ProyectoNice.Views.v_SeccionesDesdeLineas"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Command="{Binding AceptarBT}">Crear secciones</Button>
+        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <GroupBox Header="Lineas guia (en la planta activa)">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="260"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock VerticalAlignment="Center">Estilo de linea</TextBlock>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding ListaEstilosCB}" SelectedItem="{Binding EstiloSeleccCB}"/>
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="Seccion">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="260"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock VerticalAlignment="Center">Tipo de seccion</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="1">Mirar hacia</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="2">Desfase desde la linea (cm)</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="3">Profundidad de la vista (m)</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="4">Plantilla de vista</TextBlock>
+
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding ListaTiposSeccionCB}" SelectedItem="{Binding TipoSeccionSeleccCB}" DisplayMemberPath="Name"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding ListaSentidosCB}" SelectedItem="{Binding SentidoSeleccCB}"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding DesfaseTB}"/>
+                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding ProfundidadTB}"/>
+                    <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding ListaPlantillasCB}" SelectedItem="{Binding PlantillaSeleccCB}"/>
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="Cotas y plano">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="260"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <CheckBox Grid.ColumnSpan="2" Margin="0,4,0,4" IsChecked="{Binding AcotarCK}">Acotar con la regla de seccion de box</CheckBox>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="1">Estilo de las marcas de apoyo</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="2">Colocar en el plano</TextBlock>
+
+                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding ListaEstilosCB}" SelectedItem="{Binding EstiloMarcasSeleccCB}"/>
+                    <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding ListaPlanosCB}" SelectedItem="{Binding PlanoSeleccCB}"/>
+                </Grid>
+            </GroupBox>
+            <TextBlock Foreground="{DynamicResource TextoSuave}" TextWrapping="Wrap">Se crea una seccion por cada linea recta del estilo elegido en la planta activa. El desfase se aplica hacia el lado al que mira la seccion. Las cotas siguen la regla de seccion de box de dos celdas y se apoyan en marcas: no se actualizan si cambia el modelo. La vista se coloca en el primer espacio libre del plano.</TextBlock>
+        </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

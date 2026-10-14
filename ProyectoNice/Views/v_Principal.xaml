@@ -26,6 +26,10 @@
             <DataTemplate DataType="{x:Type vm:vm_CoordCompartidas}"><local:v_CoordCompartidas/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:vm_TrabajoHome}"><local:v_TrabajoHome/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:TrabajoFinal}"><local:v_TrabajoFinal/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:vm_CotaCurva}"><local:v_CotaCurva/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:vm_CorteDesarrollado}"><local:v_CorteDesarrollado/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:vm_SeccionesDesdeLineas}"><local:v_SeccionesDesdeLineas/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:vm_AcotarVistas}"><local:v_AcotarVistas/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:vm_ExportarFichas}"><local:v_ExportarFichas/></DataTemplate>
         </ResourceDictionary>
     </Window.Resources>
