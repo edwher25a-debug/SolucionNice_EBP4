@@ -28,12 +28,19 @@ namespace ProyectoNice.Acotado
         {
             var lienzo = new Lienzo(vista, opciones);
             var conjunto = new Conjunto(lienzo);
-            PerfilBox? perfil = vista is ViewSection ? PerfilBox.De(conjunto) : null;
+            string? recorte = RecortarPilotes(lienzo, conjunto);
+            if (recorte != null)
+            {
+                lienzo = new Lienzo(vista, opciones);
+                conjunto = new Conjunto(lienzo);
+            }
 
+            PerfilBox? perfil = vista is ViewSection ? PerfilBox.De(conjunto) : null;
             TipoVista tipo = opciones.Forzar != TipoVista.Automatico ? opciones.Forzar : Reglas.Detectar(conjunto, perfil != null);
             PlanDeAcotado? plan = tipo == TipoVista.Box ? perfil?.Plan() : Reglas.Plan(tipo, conjunto);
 
             var resultado = new ResultadoAcotado(vista, tipo);
+            if (recorte != null) resultado.Avisos.Add(recorte);
             if (plan == null)
             {
                 resultado.Avisos.Add(tipo == TipoVista.Box ? "la vista no corta un box de dos celdas" : "no hay una regla para esta vista");
@@ -74,6 +81,24 @@ namespace ProyectoNice.Acotado
                 .ToList();
 
         private static double HaciaAfuera(Lado lado) => lado == Lado.Abajo || lado == Lado.Izquierda ? -1 : 1;
+
+        //En cortes y alzados, los pilotes se dejan ver solo unos metros bajo la base, como en los planos del
+        //proyecto: con decenas de metros de pilote la vista no cabe en ningun plano. Devuelve el aviso o nulo
+        private static string? RecortarPilotes(Lienzo lienzo, Conjunto c)
+        {
+            if (!(lienzo.Vista is ViewSection) || !lienzo.Vista.CropBoxActive || lienzo.Opciones.PiloteVisible <= 0 || !c.Hay(Rol.Pilote)) return null;
+
+            List<Estacion> alturasBase = c.Extremos(c.Base, Eje.Y).ToList();
+            if (alturasBase.Count == 0) return null;
+
+            double visible = UnitUtils.ConvertToInternalUnits(lienzo.Opciones.PiloteVisible, UnitTypeId.Meters);
+            double limite = alturasBase[0].Posicion - visible;
+            if (lienzo.Recorte.Y0 >= limite - 1e-6) return null;
+
+            lienzo.RecortarAbajo(limite);
+            lienzo.Doc.Regenerate();
+            return $"se recorto la vista {lienzo.Opciones.PiloteVisible:0.##} m bajo la base para cortar los pilotes";
+        }
 
         private static bool FueraDelRecorte(Fila fila, Caja2D recorte) =>
             fila.Coordenada is double linea &&
