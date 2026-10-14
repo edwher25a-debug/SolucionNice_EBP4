@@ -76,7 +76,7 @@ namespace ProyectoNice.ViewModels
                     Crear = () => new vm_CoordCompartidas(doc) },
 
                 new m_Herramienta { Grupo = "DATOS", Nombre = "Coordenadas a parametros",
-                    Descripcion = "Escribe las coordenadas compartidas (m) en los parametros X, Y, Z de la categoria.",
+                    Descripcion = "Escribe las coordenadas compartidas (m) en los parametros X, Y, Z de la familia elegida, solo en la vista activa.",
                     Crear = () => new vm_TrabajoHome(doc, seleccion) },
                 new m_Herramienta { Grupo = "DATOS", Nombre = "Codigo BIM",
                     Descripcion = "Llena el parametro CodigoBIM: PROYECTO-CATEGORIA-ID-CONSECUTIVO.",
