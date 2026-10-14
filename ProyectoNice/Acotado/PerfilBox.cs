@@ -1,4 +1,3 @@
-using System.Globalization;
 using ProyectoNice.Utils;
 
 namespace ProyectoNice.Acotado
@@ -15,10 +14,10 @@ namespace ProyectoNice.Acotado
         private const double EjeCadena = 8, EjeTotal = 14.5, Cartela = 6;
 
         private readonly Lienzo lienzo;
-        private readonly List<(XYZ Normal, List<XYZ> Puntos)> trazas;
+        private readonly List<(XYZ Normal, Traza Traza)> trazas;
         private readonly List<double> muros;
 
-        private PerfilBox(Lienzo lienzo, List<(XYZ Normal, List<XYZ> Puntos)> trazas, List<double> muros)
+        private PerfilBox(Lienzo lienzo, List<(XYZ Normal, Traza Traza)> trazas, List<double> muros)
         {
             this.lienzo = lienzo;
             this.trazas = trazas;
@@ -31,13 +30,11 @@ namespace ProyectoNice.Acotado
 
         private static PerfilBox? DeUnBox(Lienzo lienzo, Pieza box)
         {
-            var detrasDelCorte = new XYZ(0, 0, -UnitUtils.ConvertToInternalUnits(0.002, UnitTypeId.Meters));
-            List<(XYZ Normal, List<XYZ> Puntos)> trazas = CorteSolidos
-                .Cortar(MetodoDesarrollo.ObtenerSolidos(box.Elemento), p => lienzo.AVista(p) - detrasDelCorte, lienzo.Recorte.Contiene)
-                .Select(t => (lienzo.VectorAVista(Normal(t.Cara)), t.Puntos))
+            List<(XYZ Normal, Traza Traza)> trazas = lienzo.Cortar(MetodoDesarrollo.ObtenerSolidos(box.Elemento))
+                .Select(t => (lienzo.VectorAVista(Normal(t.Cara)), t))
                 .ToList();
 
-            List<double> muros = trazas.Where(t => Math.Abs(t.Normal.X) > 0.999).Select(t => t.Puntos[0].X).OrderBy(x => x).ToList();
+            List<double> muros = trazas.Where(t => Math.Abs(t.Normal.X) > 0.999).Select(t => t.Traza.Puntos[0].X).OrderBy(x => x).ToList();
             return muros.Count == 6 ? new PerfilBox(lienzo, trazas, muros) : null;
         }
 
@@ -48,13 +45,14 @@ namespace ProyectoNice.Acotado
 
             double xIzq = muros[0], xDer = muros[5];
             double paso = UnitUtils.ConvertToInternalUnits(0.002, UnitTypeId.Meters), cerca = UnitUtils.ConvertToInternalUnits(0.01, UnitTypeId.Meters);
-            double yBase = trazas.Min(t => t.Puntos.Min(p => p.Y));
-            double yTapa = trazas.Max(t => t.Puntos.Max(p => p.Y));
-            List<(XYZ Normal, List<XYZ> Puntos)> tapas = trazas
-                .Where(t => t.Normal.Y > 0.95 && EsLaMasAlta(t.Puntos))
-                .OrderBy(t => t.Puntos[0].X)
+            double yBase = trazas.Min(t => t.Traza.Puntos.Min(p => p.Y));
+            double yTapa = trazas.Max(t => t.Traza.Puntos.Max(p => p.Y));
+            List<List<XYZ>> tapas = trazas
+                .Where(t => t.Normal.Y > 0.95 && EsLaMasAlta(t.Traza.Puntos))
+                .Select(t => t.Traza.Puntos)
+                .OrderBy(puntos => puntos[0].X)
                 .ToList();
-            double xQuiebre = tapas.Count >= 2 ? tapas[0].Puntos.Last().X : (xIzq + xDer) / 2;
+            double xQuiebre = tapas.Count >= 2 ? tapas[0].Last().X : (xIzq + xDer) / 2;
 
             var plan = new PlanDeAcotado();
 
@@ -82,7 +80,7 @@ namespace ProyectoNice.Acotado
             //Cartelas: todas en horizontal; en vertical las que tocan el muro central
             List<double> celdaIzq = CotasEn(ejesCelda[0]);
             double yMedio = celdaIzq.Count == 4 ? (celdaIzq[1] + celdaIzq[2]) / 2 : (yBase + yTapa) / 2;
-            foreach (List<XYZ> cartela in trazas.Where(t => EsCartela(t.Normal)).Select(t => t.Puntos))
+            foreach (List<XYZ> cartela in trazas.Where(t => EsCartela(t.Normal)).Select(t => t.Traza.Puntos))
             {
                 double x0 = cartela[0].X, x1 = cartela.Last().X, y0 = cartela.Min(p => p.Y), y1 = cartela.Max(p => p.Y);
                 plan.Filas.Add(Fila.En(Eje.X, y0 > yMedio ? y0 - Papel(Cartela) : y1 + Papel(Cartela), Marcas(new[] { x0, x1 })));
@@ -92,7 +90,7 @@ namespace ProyectoNice.Acotado
                     plan.Filas.Add(Fila.En(Eje.Y, centralPorIzquierda ? x0 - Papel(Cartela) : x1 + Papel(Cartela), Marcas(new[] { y0, y1 })));
             }
 
-            plan.Dibujo = l => tapas.ForEach(t => Pendiente(l, t.Puntos[0], t.Puntos.Last()));
+            plan.Dibujo = l => tapas.ForEach(puntos => l.Pendiente(puntos[0], puntos.Last()));
             return plan;
         }
 
@@ -116,35 +114,9 @@ namespace ProyectoNice.Acotado
 
         //Cotas de las caras casi horizontales que pasan por x, de abajo arriba
         private List<double> CotasEn(double x) =>
-            trazas.Where(t => Math.Abs(t.Normal.Y) >= 0.95 && x >= t.Puntos[0].X - 1e-6 && x <= t.Puntos.Last().X + 1e-6)
-                .Select(t => Interpolar(t.Puntos, x))
+            trazas.Where(t => Math.Abs(t.Normal.Y) >= 0.95 && t.Traza.CubreX(x))
+                .Select(t => t.Traza.YEn(x))
                 .OrderBy(y => y)
                 .ToList();
-
-        private static double Interpolar(List<XYZ> puntos, double x)
-        {
-            XYZ antes = puntos.LastOrDefault(p => p.X <= x) ?? puntos[0];
-            XYZ despues = puntos.FirstOrDefault(p => p.X >= x) ?? puntos.Last();
-            return Math.Abs(despues.X - antes.X) < 1e-9 ? antes.Y : antes.Y + (despues.Y - antes.Y) * (x - antes.X) / (despues.X - antes.X);
-        }
-
-        //Texto con el porcentaje y flecha hacia donde baja, paralelos a la tapa
-        private static void Pendiente(Lienzo l, XYZ a, XYZ b)
-        {
-            if (Math.Abs(b.X - a.X) < 1e-9) return;
-            double pendiente = (b.Y - a.Y) / (b.X - a.X);
-            double baja = pendiente > 0 ? -1 : 1;
-            XYZ medio = (a + b) / 2;
-            double y0 = medio.Y + l.Papel(9);
-            double Y(double x, double y) => y + (x - medio.X) * pendiente;
-
-            double cola = medio.X - baja * l.Papel(14), punta = medio.X + baja * l.Papel(14), aleta = punta - baja * l.Papel(5);
-            l.Linea(cola, Y(cola, y0), punta, Y(punta, y0));
-            l.Linea(punta, Y(punta, y0), aleta, Y(aleta, y0 + l.Papel(1.6)));
-            l.Linea(punta, Y(punta, y0), aleta, Y(aleta, y0 - l.Papel(1.6)));
-
-            double xTexto = medio.X - l.Papel(8);
-            l.Texto((Math.Abs(pendiente) * 100).ToString("0.0", CultureInfo.InvariantCulture) + "%", xTexto, Y(xTexto, y0 + l.Papel(8)));
-        }
     }
 }

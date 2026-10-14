@@ -79,10 +79,19 @@ namespace ProyectoNice.Acotado
             fila.Coordenada is double linea &&
             (fila.Medida == Eje.X ? linea < recorte.Y0 || linea > recorte.Y1 : linea < recorte.X0 || linea > recorte.X1);
 
-        private static void Etiquetar(Lienzo lienzo, Pieza pieza) =>
-            IndependentTag.Create(lienzo.Doc, lienzo.Vista.Id, new Reference(pieza.Elemento), false,
-                TagMode.TM_ADDBY_CATEGORY, TagOrientation.Horizontal,
-                lienzo.AModelo(pieza.Caja.Centro(Eje.X), pieza.Caja.Centro(Eje.Y)));
+        private static void Etiquetar(Lienzo lienzo, Pieza pieza)
+        {
+            try
+            {
+                IndependentTag.Create(lienzo.Doc, lienzo.Vista.Id, new Reference(pieza.Elemento), false,
+                    TagMode.TM_ADDBY_CATEGORY, TagOrientation.Horizontal,
+                    lienzo.AModelo(pieza.Caja.Centro(Eje.X), pieza.Caja.Centro(Eje.Y)));
+            }
+            catch (Autodesk.Revit.Exceptions.InvalidOperationException)
+            {
+                throw new InvalidOperationException($"no hay una etiqueta de {pieza.Elemento.Category.Name} cargada en el proyecto");
+            }
+        }
 
         private static int Diametros(Document doc, View vista, List<Reference> arcos, ResultadoAcotado resultado)
         {

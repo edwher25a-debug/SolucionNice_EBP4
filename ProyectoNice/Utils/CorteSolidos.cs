@@ -3,16 +3,30 @@ namespace ProyectoNice.Utils
     /// <summary>Linea que deja una cara al atravesar una superficie de corte, en el plano de salida.</summary>
     public sealed class Traza
     {
-        public Traza(Face cara, List<XYZ> puntos)
+        public Traza(Face cara, List<XYZ> puntos, bool horizontal)
         {
             Cara = cara;
             Puntos = puntos;
+            EsHorizontal = horizontal;
         }
 
         public Face Cara { get; }
 
         /// <summary>Puntos (X, Y, 0) ordenados en la direccion en que mas se extiende la traza.</summary>
         public List<XYZ> Puntos { get; }
+
+        /// <summary>Se extiende mas en X que en Y: sus puntos van ordenados por X.</summary>
+        public bool EsHorizontal { get; }
+
+        public bool CubreX(double x) => EsHorizontal && x >= Puntos[0].X - 1e-6 && x <= Puntos[Puntos.Count - 1].X + 1e-6;
+
+        /// <summary>Altura de una traza horizontal en x, interpolando entre sus puntos.</summary>
+        public double YEn(double x)
+        {
+            XYZ antes = Puntos.LastOrDefault(p => p.X <= x) ?? Puntos[0];
+            XYZ despues = Puntos.FirstOrDefault(p => p.X >= x) ?? Puntos[Puntos.Count - 1];
+            return Math.Abs(despues.X - antes.X) < 1e-9 ? antes.Y : antes.Y + (despues.Y - antes.Y) * (x - antes.X) / (despues.X - antes.X);
+        }
     }
 
     /// <summary>
@@ -45,7 +59,7 @@ namespace ProyectoNice.Utils
 
             //Una cara plana o reglada se corta en una sola linea: basta ordenarla por su eje mas largo
             bool horizontal = cruces.Max(p => p.X) - cruces.Min(p => p.X) >= cruces.Max(p => p.Y) - cruces.Min(p => p.Y);
-            return new Traza(cara, (horizontal ? cruces.OrderBy(p => p.X) : cruces.OrderBy(p => p.Y)).ToList());
+            return new Traza(cara, (horizontal ? cruces.OrderBy(p => p.X) : cruces.OrderBy(p => p.Y)).ToList(), horizontal);
         }
 
         private static IEnumerable<(int A, int B)> Aristas(MeshTriangle triangulo) =>

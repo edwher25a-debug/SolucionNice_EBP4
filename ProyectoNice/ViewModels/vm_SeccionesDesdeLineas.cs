@@ -233,7 +233,8 @@ namespace ProyectoNice.ViewModels
             //Plano
             if (plano != null)
             {
-                if (!ColocarEnPlano(plano, seccion)) avisos.Add($"no hay espacio libre en el plano {plano.SheetNumber}");
+                string colocacion = ColocarEnPlano(plano, seccion);
+                if (colocacion != "") avisos.Add(colocacion);
             }
 
             return string.Join("; ", avisos);
@@ -243,11 +244,7 @@ namespace ProyectoNice.ViewModels
         private static Caja2D? ExtensionCortada(ViewSection seccion, IEnumerable<Element> candidatos)
         {
             var lienzo = new Lienzo(seccion, new OpcionesAcotado());
-            var detrasDelCorte = new XYZ(0, 0, -UnitUtils.ConvertToInternalUnits(0.002, UnitTypeId.Meters));
-            List<XYZ> puntos = CorteSolidos
-                .Cortar(candidatos.SelectMany(MetodoDesarrollo.ObtenerSolidos),
-                    p => lienzo.AVista(p) - detrasDelCorte,
-                    p => p.X >= lienzo.Recorte.X0 && p.X <= lienzo.Recorte.X1)
+            List<XYZ> puntos = lienzo.Cortar(candidatos.SelectMany(MetodoDesarrollo.ObtenerSolidos))
                 .SelectMany(t => t.Puntos)
                 .ToList();
             return puntos.Count == 0 ? (Caja2D?)null : Caja2D.De(puntos);
@@ -268,10 +265,11 @@ namespace ProyectoNice.ViewModels
             seccion.Document.Regenerate();
         }
 
-        //Primer hueco libre del plano: junto a la ultima vista colocada o recorriendo el plano por filas
-        private bool ColocarEnPlano(ViewSheet plano, View vista)
+        //Coloca la vista siempre: en el primer hueco libre (junto a una vista ya colocada o recorriendo el plano
+        //por filas) o, si la seccion no cabe en ninguno, donde menos tape. Devuelve el aviso, o vacio si quedo libre
+        private string ColocarEnPlano(ViewSheet plano, View vista)
         {
-            if (!Viewport.CanAddViewToSheet(doc, plano.Id, vista.Id)) return false;
+            if (!Viewport.CanAddViewToSheet(doc, plano.Id, vista.Id)) return $"la vista ya esta en otro plano y no se coloco en {plano.SheetNumber}";
 
             double Mm(double milimetros) => UnitUtils.ConvertToInternalUnits(milimetros, UnitTypeId.Millimeters);
             List<Outline> ocupados = plano.GetAllViewports().Select(id => ((Viewport)doc.GetElement(id)).GetBoxOutline()).ToList();
@@ -284,8 +282,8 @@ namespace ProyectoNice.ViewModels
             }
 
             //Limites: el cajetin, o una hoja A0 si el plano no tiene
-            Element cajetin = new FilteredElementCollector(doc, plano.Id).OfCategory(BuiltInCategory.OST_TitleBlocks).FirstElement();
-            BoundingBoxXYZ hoja = cajetin?.get_BoundingBox(plano);
+            Element? cajetin = new FilteredElementCollector(doc, plano.Id).OfCategory(BuiltInCategory.OST_TitleBlocks).FirstElement();
+            BoundingBoxXYZ? hoja = cajetin?.get_BoundingBox(plano);
             double margen = Mm(10);
             double minX = hoja != null ? hoja.Min.X + margen : 0, maxX = hoja != null ? hoja.Max.X - margen : Mm(1189);
             double minY = hoja != null ? hoja.Min.Y + margen : 0, maxY = hoja != null ? hoja.Max.Y - margen : Mm(841);
@@ -297,30 +295,33 @@ namespace ProyectoNice.ViewModels
             double alto = propio.MaximumPoint.Y - propio.MinimumPoint.Y;
             double separacion = Mm(10);
 
-            bool Cabe(double x0, double y0)
+            //Area de la vista, con su separacion, que cae sobre otras vistas o tablas o fuera de la hoja
+            double Solape(XYZ esquina)
             {
-                double x1 = x0 + ancho, y1 = y0 + alto;
-                if (x0 < minX || x1 > maxX || y0 < minY || y1 > maxY) return false;
-                return ocupados.All(o => x1 + separacion / 2 <= o.MinimumPoint.X || x0 - separacion / 2 >= o.MaximumPoint.X ||
-                                         y1 + separacion / 2 <= o.MinimumPoint.Y || y0 - separacion / 2 >= o.MaximumPoint.Y);
+                double x0 = esquina.X - separacion / 2, y0 = esquina.Y - separacion / 2;
+                double x1 = esquina.X + ancho + separacion / 2, y1 = esquina.Y + alto + separacion / 2;
+                double Cruce(double a0, double a1, double b0, double b1) => Math.Max(0, Math.Min(a1, b1) - Math.Max(a0, b0));
+                double dentroDeLaHoja = Cruce(x0, x1, minX, maxX) * Cruce(y0, y1, minY, maxY);
+                return ocupados.Sum(o => Cruce(x0, x1, o.MinimumPoint.X, o.MaximumPoint.X) * Cruce(y0, y1, o.MinimumPoint.Y, o.MaximumPoint.Y))
+                       + (x1 - x0) * (y1 - y0) - dentroDeLaHoja;
             }
 
-            var candidatos = new List<XYZ>();
-            foreach (Outline o in ocupados.OrderBy(o => o.MinimumPoint.Y).ThenBy(o => o.MinimumPoint.X))
-                candidatos.Add(new XYZ(o.MaximumPoint.X + separacion, o.MinimumPoint.Y, 0));
-            for (double y = minY; y + alto <= maxY; y += Mm(10))
-                for (double x = minX; x + ancho <= maxX; x += Mm(10))
-                    candidatos.Add(new XYZ(x, y, 0));
+            IEnumerable<XYZ> junto = ocupados.OrderBy(o => o.MinimumPoint.Y).ThenBy(o => o.MinimumPoint.X)
+                .Select(o => new XYZ(o.MaximumPoint.X + separacion, o.MinimumPoint.Y, 0));
+            IEnumerable<XYZ> rejilla =
+                from y in Pasos(minY, Math.Max(minY, maxY - alto), Mm(10))
+                from x in Pasos(minX, Math.Max(minX, maxX - ancho), Mm(10))
+                select new XYZ(x, y, 0);
+            List<XYZ> candidatos = junto.Concat(rejilla).ToList();
 
-            XYZ esquina = candidatos.FirstOrDefault(c => Cabe(c.X, c.Y));
-            if (esquina == null)
-            {
-                doc.Delete(nuevo.Id);
-                return false;
-            }
-
+            XYZ? libre = candidatos.FirstOrDefault(c => Solape(c) < 1e-9);
+            XYZ esquina = libre ?? candidatos.OrderBy(Solape).First();
             nuevo.SetBoxCenter(new XYZ(esquina.X + ancho / 2, esquina.Y + alto / 2, 0));
-            return true;
+
+            return libre != null ? "" : $"no habia un hueco libre en el plano {plano.SheetNumber}: la vista quedo donde menos tapa, revisela";
         }
+
+        private static IEnumerable<double> Pasos(double desde, double hasta, double paso) =>
+            Enumerable.Range(0, (int)Math.Floor((hasta - desde) / paso) + 1).Select(i => desde + i * paso);
     }
 }
