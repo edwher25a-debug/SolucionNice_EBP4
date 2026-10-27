@@ -19,10 +19,16 @@
     <PropertyGroup Condition="$(Configuration.Contains('R25'))">
         <RevitVersion>2025</RevitVersion>
         <TargetFramework>net8.0-windows</TargetFramework>
+        <!-- Revit 2025 ya carga la 2025.0.0 de RevitLookup y rechaza otra version de Nice3point -->
+        <NiceVersion>2025.0.0</NiceVersion>
     </PropertyGroup>
     <PropertyGroup Condition="$(Configuration.Contains('R26'))">
         <RevitVersion>2026</RevitVersion>
         <TargetFramework>net8.0-windows</TargetFramework>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(NiceVersion)' == ''">
+        <NiceVersion>$(RevitVersion).*</NiceVersion>
     </PropertyGroup>
 
     <!-- Launch configuration -->
@@ -44,8 +50,8 @@
         <!-- Revit References -->
         <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
         <PackageReference Include="Nice3point.Revit.Build.Tasks" Version="3.0.1" />
-        <PackageReference Include="Nice3point.Revit.Toolkit" Version="$(RevitVersion).*" />
-        <PackageReference Include="Nice3point.Revit.Extensions" Version="$(RevitVersion).*" />
+        <PackageReference Include="Nice3point.Revit.Toolkit" Version="$(NiceVersion)" />
+        <PackageReference Include="Nice3point.Revit.Extensions" Version="$(NiceVersion)" />
         <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
         <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />
 
