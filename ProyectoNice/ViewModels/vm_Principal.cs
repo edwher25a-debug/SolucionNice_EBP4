@@ -81,6 +81,9 @@ namespace ProyectoNice.ViewModels
                 new m_Herramienta { Grupo = "DATOS", Nombre = "Codigo BIM",
                     Descripcion = "Llena el parametro CodigoBIM: PROYECTO-CATEGORIA-ID-CONSECUTIVO.",
                     Crear = () => new TrabajoFinal(doc, seleccion) },
+                new m_Herramienta { Grupo = "DATOS", Nombre = "Parametros desde presupuesto",
+                    Descripcion = "Compara los parametros 02_xx (codigo, capitulo, subcapitulo, nombre, unidad) con el Excel del presupuesto y aplica los cambios que marque.",
+                    Crear = () => new vm_ParametrosPresupuesto(doc) },
 
                 new m_Herramienta { Grupo = "DOCUMENTACION", Nombre = "Cota en curva",
                     Descripcion = "Cota dibujada que sigue una linea curva y muestra su longitud medida sobre la curva.",

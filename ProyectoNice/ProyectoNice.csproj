@@ -53,6 +53,11 @@
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     </ItemGroup>
     
+    <!-- Lectura de .xlsx (en .NET 8 ya viene incluido) -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+        <Reference Include="System.IO.Compression" />
+    </ItemGroup>
+
     <ItemGroup>
         <Resource Include="Resources\Icons\RibbonIcon16.png" />
         <Resource Include="Resources\Icons\RibbonIcon32.png" />
