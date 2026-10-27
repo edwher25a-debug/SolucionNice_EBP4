@@ -49,8 +49,8 @@
         <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
         <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />
 
-        <!-- MVVM -->
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+        <!-- MVVM: 8.2.x porque Revit 2025 ya carga la 8.2 de RevitLookup y no admite una version mayor -->
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     </ItemGroup>
     
     <!-- Lectura de .xlsx (en .NET 8 ya viene incluido) -->
