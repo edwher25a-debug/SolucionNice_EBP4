@@ -19,7 +19,7 @@
                     <TextBlock Width="110" VerticalAlignment="Center">Hoja</TextBlock>
                     <ComboBox ItemsSource="{Binding ListaHojasCB}" SelectedItem="{Binding HojaSeleccCB}" Width="300" HorizontalAlignment="Left"/>
                 </DockPanel>
-                <TextBlock Text="{Binding ResumenExcel}" TextWrapping="Wrap" Foreground="{StaticResource TextoSuave}" Margin="0,4,0,0"/>
+                <TextBlock Text="{Binding ResumenExcel}" TextWrapping="Wrap" Foreground="{DynamicResource TextoSuave}" Margin="0,4,0,0"/>
             </StackPanel>
         </GroupBox>
 
@@ -48,7 +48,7 @@
                         <Button Command="{Binding MarcarVaciosBT}" Padding="10,4">Marcar solo vacíos</Button>
                         <Button Command="{Binding DesmarcarBT}" Padding="10,4">Desmarcar todo</Button>
                     </StackPanel>
-                    <TextBlock Text="{Binding ResumenComparacion}" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{StaticResource TextoSuave}"/>
+                    <TextBlock Text="{Binding ResumenComparacion}" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextoSuave}"/>
                 </DockPanel>
                 <DataGrid ItemsSource="{Binding Cambios}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" MinHeight="140">
                     <DataGrid.Columns>
