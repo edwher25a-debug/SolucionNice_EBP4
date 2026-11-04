@@ -98,6 +98,10 @@ namespace ProyectoNice.ViewModels
                     Descripcion = "Una seccion por cada linea de un estilo: plantilla, cotas de box y colocacion en un plano.",
                     Crear = () => new vm_SeccionesDesdeLineas(doc, seleccion) },
 
+                new m_Herramienta { Grupo = "DOCUMENTACION", Nombre = "Planos desde CAD",
+                    Descripcion = "Monta planos de AutoCAD en Revit: una vista de dibujo por viewport, con lineas de detalle y textos nativos, y la hoja armada igual que el layout.",
+                    Crear = () => new vm_PlanosDesdeCAD(doc) },
+
                 new m_Herramienta { Grupo = "EXPORTAR", Nombre = "Planos a PDF y DWG",
                     Descripcion = "Exporta los planos marcados a PDF (uno por plano o todos juntos) y a DWG.",
                     Crear = () => new vm_ExportarPlanos(doc) },

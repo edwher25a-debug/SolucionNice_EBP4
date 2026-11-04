@@ -1,0 +1,85 @@
+<UserControl x:Class="ProyectoNice.Views.v_PlanosDesdeCAD"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+            <CheckBox VerticalAlignment="Center" Margin="0,0,12,0" IsChecked="{Binding EnsayoCK}">Modo ensayo (no escribe nada)</CheckBox>
+            <Button Command="{Binding AceptarBT}">Montar planos</Button>
+        </StackPanel>
+
+        <GroupBox DockPanel.Dock="Top" Header="Manifiestos">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <TextBlock VerticalAlignment="Center">Carpeta</TextBlock>
+                <TextBox Grid.Column="1" VerticalAlignment="Center" Text="{Binding CarpetaTB}"/>
+                <Button Grid.Column="2" Command="{Binding ExaminarBT}">Examinar...</Button>
+                <Button Grid.Column="3" Command="{Binding LeerBT}">Leer</Button>
+
+                <TextBlock Grid.Row="1" VerticalAlignment="Center">Plano</TextBlock>
+                <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" ItemsSource="{Binding ListaPlanosCB}" SelectedItem="{Binding PlanoSeleccCB}"/>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox DockPanel.Dock="Top" Header="Plantilla del proyecto">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="300"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <TextBlock VerticalAlignment="Center">Cuadro de rotulacion</TextBlock>
+                <TextBlock Grid.Row="1" VerticalAlignment="Center">Tipo de vista de dibujo</TextBlock>
+                <TextBlock Grid.Row="2" VerticalAlignment="Center">Tipo de ventana</TextBlock>
+                <TextBlock Grid.Row="3" VerticalAlignment="Center">Estilo "sin mapear"</TextBlock>
+
+                <ComboBox Grid.Column="1" ItemsSource="{Binding ListaRotulosCB}" SelectedItem="{Binding RotuloSeleccCB}" DisplayMemberPath="Name"/>
+                <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding ListaTiposVistaCB}" SelectedItem="{Binding TipoVistaSeleccCB}" DisplayMemberPath="Name"/>
+                <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding ListaTiposVentanaCB}" SelectedItem="{Binding TipoVentanaSeleccCB}"/>
+                <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding ListaEstilosCB}" SelectedItem="{Binding EstiloSinMapearSeleccCB}"/>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox DockPanel.Dock="Top" Header="Calibracion papel de AutoCAD a hoja de Revit (mm, se mide una vez para toda la serie)">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="100"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock VerticalAlignment="Center">Desfase X</TextBlock>
+                <TextBox Grid.Column="1" VerticalAlignment="Center" Text="{Binding DesfaseXTB}"/>
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="12,0,0,0">Desfase Y</TextBlock>
+                <TextBox Grid.Column="3" VerticalAlignment="Center" Text="{Binding DesfaseYTB}"/>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Header="Capas del CAD y su estilo de linea en Revit (las que falten salen con el estilo &quot;sin mapear&quot; y en el reporte)">
+            <DataGrid ItemsSource="{Binding Capas}" AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True" MinHeight="120">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Capa del CAD" Binding="{Binding Capa}" Width="*"/>
+                    <DataGridTextColumn Header="Veces" Binding="{Binding Planos}" IsReadOnly="True" Width="60"/>
+                    <DataGridComboBoxColumn Header="Estilo de linea" Width="*"
+                                            SelectedItemBinding="{Binding EstiloSelecc}"
+                                            ItemsSource="{Binding DataContext.ListaEstilosCB, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+    </DockPanel>
+</UserControl>
