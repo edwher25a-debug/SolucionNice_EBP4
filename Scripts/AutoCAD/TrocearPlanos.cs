@@ -146,7 +146,7 @@ public static class TrocearPlanos
 
             try
             {
-                Recolectar(db, tr, ms, c, modeloMm, idsGeometria, temporales, vista.Textos, avisos);
+                Recolectar(db, tr, ms, c, modeloMm, idsGeometria, temporales, vista.Textos, vista.Capas, avisos);
 
                 if (!soloAnalizar && idsGeometria.Count > 0)
                     Escribir(db, Path.Combine(carpetaSalida, vista.Dwg), idsGeometria, c);
@@ -259,7 +259,8 @@ public static class TrocearPlanos
     // =================================================================================
 
     private static void Recolectar(Database db, Transaction tr, BlockTableRecord ms, Candidato c, double modeloMm,
-        List<ObjectId> idsGeometria, List<ObjectId> temporales, List<Texto> textos, List<string> avisos)
+        List<ObjectId> idsGeometria, List<ObjectId> temporales, List<Texto> textos,
+        Dictionary<string, int> capas, List<string> avisos)
     {
         var congeladas = new HashSet<ObjectId>();
         foreach (ObjectId id in c.CapasCongeladas) congeladas.Add(id);
@@ -311,7 +312,7 @@ public static class TrocearPlanos
             try { ent = tr.GetObject(id, OpenMode.ForRead) as AcEntity; } catch { }
             if (ent == null) continue;
 
-            Clasificar(db, tr, ms, ent, c, modeloMm, 0, idsGeometria, temporales, textos, avisos);
+            Clasificar(db, tr, ms, ent, c, modeloMm, 0, idsGeometria, temporales, textos, capas, avisos);
         }
 
         if (sinExtents > 0)
@@ -321,7 +322,7 @@ public static class TrocearPlanos
     //Reparte una entidad entre geometria y textos, reventando lo que haga falta
     private static void Clasificar(Database db, Transaction tr, BlockTableRecord ms, AcEntity ent, Candidato c,
         double modeloMm, int profundidad, List<ObjectId> idsGeometria, List<ObjectId> temporales,
-        List<Texto> textos, List<string> avisos)
+        List<Texto> textos, Dictionary<string, int> capas, List<string> avisos)
     {
         //--- Texto ---
         var dbText = ent as DBText;
@@ -341,6 +342,7 @@ public static class TrocearPlanos
         //--- Geometria directa: Line, Arc, Circle, Polyline, Spline, Ellipse... ---
         if (ent is AcCurve)
         {
+            Contar(capas, ent.Layer);
             if (!ent.ObjectId.IsNull) idsGeometria.Add(ent.ObjectId);
             else Anexar(tr, ms, ent, idsGeometria, temporales);
             return;
@@ -351,7 +353,7 @@ public static class TrocearPlanos
         if (solido != null)
         {
             AcEntity contorno = ContornoDeSolido(solido);
-            if (contorno != null) Anexar(tr, ms, contorno, idsGeometria, temporales);
+            if (contorno != null) { Contar(capas, solido.Layer); Anexar(tr, ms, contorno, idsGeometria, temporales); }
             return;
         }
 
@@ -378,7 +380,7 @@ public static class TrocearPlanos
                 //Un pedazo hereda la capa de su padre si estaba en capa 0
                 if (string.IsNullOrEmpty(hijo.Layer) || hijo.Layer == "0") hijo.Layer = ent.Layer;
 
-                Clasificar(db, tr, ms, hijo, c, modeloMm, profundidad + 1, idsGeometria, temporales, textos, avisos);
+                Clasificar(db, tr, ms, hijo, c, modeloMm, profundidad + 1, idsGeometria, temporales, textos, capas, avisos);
             }
 
             pedazos.Dispose();
@@ -396,6 +398,13 @@ public static class TrocearPlanos
         tr.AddNewlyCreatedDBObject(ent, true);
         idsGeometria.Add(id);
         temporales.Add(id);
+    }
+
+    private static void Contar(Dictionary<string, int> capas, string capa)
+    {
+        if (string.IsNullOrEmpty(capa)) return;
+        int n;
+        capas[capa] = capas.TryGetValue(capa, out n) ? n + 1 : 1;
     }
 
     private static AcEntity ContornoDeSolido(Solid solido)
@@ -560,6 +569,24 @@ public static class TrocearPlanos
         sb.AppendLine($"  \"papelAnchoMm\": {Num(papelAnchoMm)},");
         sb.AppendLine($"  \"papelAltoMm\": {Num(papelAltoMm)},");
 
+        //Las capas que de verdad se exportaron: asi el lado de Revit puede llenar su tabla
+        //de mapeo sin tener que vincular los dwg primero
+        var capasPlano = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (Vista v in vistas)
+            foreach (KeyValuePair<string, int> par in v.Capas)
+            {
+                int n;
+                capasPlano[par.Key] = capasPlano.TryGetValue(par.Key, out n) ? n + par.Value : par.Value;
+            }
+
+        var nombresCapas = new List<string>(capasPlano.Keys);
+        nombresCapas.Sort(StringComparer.OrdinalIgnoreCase);
+
+        sb.AppendLine("  \"capas\": [");
+        for (int i = 0; i < nombresCapas.Count; i++)
+            sb.AppendLine($"    {{ \"capa\": {Cadena(nombresCapas[i])}, \"entidades\": {capasPlano[nombresCapas[i]]} }}{(i + 1 < nombresCapas.Count ? "," : "")}");
+        sb.AppendLine("  ],");
+
         sb.AppendLine("  \"avisos\": [");
         for (int i = 0; i < avisos.Count; i++)
             sb.AppendLine($"    {Cadena(avisos[i])}{(i + 1 < avisos.Count ? "," : "")}");
@@ -688,6 +715,7 @@ public static class TrocearPlanos
         public double VentanaAnchoM, VentanaAltoM, VentanaCentroX, VentanaCentroY;
         public double PapelCentroXMm, PapelCentroYMm;
         public int Entidades;
+        public Dictionary<string, int> Capas = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         public List<Texto> Textos = new List<Texto>();
     }
 

@@ -169,16 +169,21 @@ namespace ProyectoNice.ViewModels
                 }
             }
 
-            //Las capas se sacan de los dwg vinculandolos, asi que aqui solo se pueden listar las
-            //de los textos. La tabla se completa sola en la primera pasada y las que falten salen
-            //con el estilo de "sin mapear" y en el reporte.
+            //Las capas de la geometria las declara el manifiesto: en Revit no se sabrian hasta
+            //vincular cada dwg, y la tabla hay que poder llenarla antes de empezar.
+            //Las de los textos se suman por si alguna solo aparece ahi.
             foreach (m_PlanoCAD plano in planos)
+            {
+                foreach (KeyValuePair<string, int> par in plano.Capas)
+                    porCapa[par.Key] = porCapa.TryGetValue(par.Key, out int previas) ? previas + par.Value : par.Value;
+
                 foreach (m_VistaCAD vista in plano.Vistas)
                     foreach (m_TextoCAD texto in vista.Textos)
                     {
                         if (texto.Capa == "") continue;
                         porCapa[texto.Capa] = porCapa.TryGetValue(texto.Capa, out int n) ? n + 1 : 1;
                     }
+            }
 
             foreach (KeyValuePair<string, int> par in porCapa.OrderBy(p => p.Key))
                 Capas.Add(new m_MapeoCapa

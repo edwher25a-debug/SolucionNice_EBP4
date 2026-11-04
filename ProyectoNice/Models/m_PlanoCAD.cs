@@ -19,6 +19,11 @@ namespace ProyectoNice.Models
 
         public List<m_VistaCAD> Vistas { get; set; } = new List<m_VistaCAD>();
 
+        //Capas que el lado de AutoCAD declara haber exportado, con cuantas entidades.
+        //Viene en el manifiesto porque las capas de la geometria no se conocen en Revit
+        //hasta vincular el dwg, y la tabla de mapeo hay que poder llenarla antes.
+        public Dictionary<string, int> Capas { get; } = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
         //Avisos que ya dejo el lado de AutoCAD (viewports girados, no soportados, etc.)
         public List<string> Avisos { get; set; } = new List<string>();
 

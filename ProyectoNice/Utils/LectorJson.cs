@@ -39,6 +39,16 @@ namespace ProyectoNice.Utils
             foreach (object aviso in Lista(mapa, "avisos"))
                 plano.Avisos.Add(aviso as string ?? "");
 
+            foreach (object elemento in Lista(mapa, "capas"))
+            {
+                var mc = elemento as Dictionary<string, object>;
+                if (mc == null) continue;
+                string capa = Texto(mc, "capa");
+                if (capa == "") continue;
+                int entidades = (int)Math.Round(Numero(mc, "entidades"));
+                plano.Capas[capa] = plano.Capas.TryGetValue(capa, out int previas) ? previas + entidades : entidades;
+            }
+
             foreach (object elemento in Lista(mapa, "vistas"))
             {
                 var m = elemento as Dictionary<string, object>;
