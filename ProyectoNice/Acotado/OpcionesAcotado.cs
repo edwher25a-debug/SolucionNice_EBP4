@@ -1,4 +1,4 @@
-using ProyectoNice.Utils;
+﻿using ProyectoNice.Utils;
 
 namespace ProyectoNice.Acotado
 {
@@ -12,6 +12,9 @@ namespace ProyectoNice.Acotado
 
         public double PrimeraFila { get; set; } = 8;
         public double EntreFilas { get; set; } = 7;
+
+        /// <summary>Metros de pilote que se dejan ver bajo la base en cortes y alzados; 0 deja el recorte como esta.</summary>
+        public double PiloteVisible { get; set; } = 1;
 
         public bool Niveles { get; set; } = true;
         public bool Etiquetas { get; set; } = true;

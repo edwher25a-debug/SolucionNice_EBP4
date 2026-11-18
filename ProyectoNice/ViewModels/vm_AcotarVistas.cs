@@ -1,4 +1,4 @@
-using Autodesk.Revit.UI;
+﻿using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using ProyectoNice.Acotado;
 using ProyectoNice.Utils;
@@ -38,6 +38,7 @@ namespace ProyectoNice.ViewModels
         public string EstiloMarcasSeleccCB { get; set; }
         public double PrimeraFilaTB { get; set; } = 8;
         public double EntreFilasTB { get; set; } = 7;
+        public double PiloteVisibleTB { get; set; } = 1;
         public bool NivelesCK { get; set; } = true;
         public bool EtiquetasCK { get; set; } = true;
         public bool DiametrosCK { get; set; } = true;
@@ -82,9 +83,9 @@ namespace ProyectoNice.ViewModels
 
         public void Validar()
         {
-            if (PrimeraFilaTB <= 0 || EntreFilasTB <= 0)
+            if (PrimeraFilaTB <= 0 || EntreFilasTB <= 0 || PiloteVisibleTB < 0)
             {
-                Aviso("Acotar vistas: las separaciones deben ser mayores que cero.");
+                Aviso("Acotar vistas: las separaciones deben ser mayores que cero y los metros de pilote no pueden ser negativos.");
                 return;
             }
 
@@ -108,6 +109,7 @@ namespace ProyectoNice.ViewModels
                 Forzar = TipoVistaSeleccCB,
                 PrimeraFila = PrimeraFilaTB,
                 EntreFilas = EntreFilasTB,
+                PiloteVisible = PiloteVisibleTB,
                 Niveles = NivelesCK,
                 Etiquetas = EtiquetasCK,
                 Diametros = DiametrosCK

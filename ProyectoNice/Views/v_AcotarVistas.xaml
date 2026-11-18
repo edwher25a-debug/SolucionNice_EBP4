@@ -36,14 +36,17 @@
                         <RowDefinition/>
                         <RowDefinition/>
                         <RowDefinition/>
+                        <RowDefinition/>
                     </Grid.RowDefinitions>
                     <TextBlock VerticalAlignment="Center">Tipo de vista</TextBlock>
                     <TextBlock VerticalAlignment="Center" Grid.Row="1">Primera fila (mm en papel)</TextBlock>
                     <TextBlock VerticalAlignment="Center" Grid.Row="2">Entre filas (mm en papel)</TextBlock>
+                    <TextBlock VerticalAlignment="Center" Grid.Row="3">Pilote visible bajo la base (m, 0 = no recortar)</TextBlock>
 
                     <ComboBox Grid.Column="1" ItemsSource="{Binding ListaTiposVistaCB}" SelectedItem="{Binding TipoVistaSeleccCB}"/>
                     <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding PrimeraFilaTB}"/>
                     <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding EntreFilasTB}"/>
+                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding PiloteVisibleTB}"/>
                 </Grid>
             </GroupBox>
             <GroupBox Header="Anotaciones">

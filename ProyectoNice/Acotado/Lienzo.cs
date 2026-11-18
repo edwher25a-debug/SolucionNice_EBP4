@@ -58,6 +58,15 @@ namespace ProyectoNice.Acotado
 
         public double Papel(double milimetros) => MetodoDesarrollo.PapelAModelo(milimetros, Vista.Scale);
 
+        /// <summary>Sube el borde inferior del recorte hasta y (coordenada de la vista); los demas bordes no cambian.</summary>
+        public void RecortarAbajo(double y)
+        {
+            BoundingBoxXYZ recorte = Vista.CropBox;
+            double local = recorte.Transform.Inverse.OfPoint(AModelo(0, y)).Y;
+            recorte.Min = new XYZ(recorte.Min.X, local, recorte.Min.Z);
+            Vista.CropBox = recorte;
+        }
+
         /// <summary>Trazas que dejan los solidos 2 mm detras del plano de la vista, dentro del recorte.</summary>
         public List<Traza> Cortar(IEnumerable<Solid> solidos)
         {

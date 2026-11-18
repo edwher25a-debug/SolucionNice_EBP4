@@ -142,7 +142,10 @@ namespace ProyectoNice.Acotado
             //Alturas en los bordes y en el eje: fondo, caras de la base y de la viga, y la corona en ese punto
             double paso = l.Papel(0.5);
             double xIzq = bordesSuperior[0].Posicion + paso, xDer = bordesSuperior[1].Posicion - paso;
-            List<Estacion> eje = c.EjeCentral(Eje.X).ToList();
+            //Eje dibujado en la vista; si no hay ninguno, el centro de la viga
+            List<Estacion> eje = c.EjeCentral(Eje.X)
+                .DefaultIfEmpty(new Estacion((bordesSuperior[0].Posicion + bordesSuperior[1].Posicion) / 2, null))
+                .ToList();
             IEnumerable<Estacion> Alturas(double x) =>
                 c.Extremos(c.Base, Eje.Y).Concat(c.Extremos(superior, Eje.Y)).Concat(c.Corona(x) is Estacion corona ? new[] { corona } : Array.Empty<Estacion>());
 
