@@ -9,7 +9,7 @@ using ProyectoNice.Models;
 namespace ProyectoNice.ViewModels
 {
     /// <summary>
-    ///     Exporta los planos marcados a PDF (uno por plano o todos en un solo archivo) y a DWG.
+    ///     Exporta los planos marcados a PDF y DWF (uno por plano o todos en un solo archivo) y a DWG.
     ///     El nombre de cada archivo sale del numero, el nombre y la revision actual del plano.
     /// </summary>
     public sealed class vm_ExportarPlanos : vm_Herramienta
@@ -67,6 +67,24 @@ namespace ProyectoNice.ViewModels
         public string NombrePdfUnicoTB { get; set; }
         public List<string> ListaColoresCB { get; } = new List<string> { "Color", "Escala de grises", "Blanco y negro" };
         public string ColorSeleccCB { get; set; } = "Color";
+
+        //DWF
+        private bool exportarDwfCK;
+        public bool ExportarDwfCK
+        {
+            get => exportarDwfCK;
+            set => SetProperty(ref exportarDwfCK, value);
+        }
+
+        private bool unirDwfCK;
+        public bool UnirDwfCK
+        {
+            get => unirDwfCK;
+            set => SetProperty(ref unirDwfCK, value);
+        }
+
+        public string NombreDwfUnicoTB { get; set; }
+        public bool PropiedadesDwfCK { get; set; } = true;
 
         //DWG
         private bool exportarDwgCK = true;
@@ -139,6 +157,7 @@ namespace ProyectoNice.ViewModels
             ListaVersionesCB.AddRange(versiones.Keys);
 
             NombrePdfUnicoTB = string.IsNullOrWhiteSpace(doc.Title) ? "Planos" : Path.GetFileNameWithoutExtension(doc.Title);
+            NombreDwfUnicoTB = NombrePdfUnicoTB;
             carpetaTB = CarpetaPredeterminada(doc);
 
             MarcarTodosBT = new RelayCommand(() => MarcarVisibles(true));
@@ -244,9 +263,9 @@ namespace ProyectoNice.ViewModels
                 Aviso("Marque al menos un plano.");
                 return;
             }
-            if (!ExportarPdfCK && !ExportarDwgCK)
+            if (!ExportarPdfCK && !ExportarDwfCK && !ExportarDwgCK)
             {
-                Aviso("Elija PDF, DWG o los dos.");
+                Aviso("Elija al menos un formato: PDF, DWF o DWG.");
                 return;
             }
             if (string.IsNullOrWhiteSpace(CarpetaTB) || !Path.IsPathRooted(CarpetaTB))
@@ -259,6 +278,11 @@ namespace ProyectoNice.ViewModels
                 Aviso("Escriba el nombre del PDF unico.");
                 return;
             }
+            if (ExportarDwfCK && UnirDwfCK && string.IsNullOrWhiteSpace(Sanitizar(NombreDwfUnicoTB)))
+            {
+                Aviso("Escriba el nombre del DWF unico.");
+                return;
+            }
 
             Ejecutar(() => Exportar(marcados));
         }
@@ -269,12 +293,14 @@ namespace ProyectoNice.ViewModels
             Dictionary<m_PlanoExportar, string> nombres = NombresDeArchivo(marcados);
 
             int pdfs = ExportarPdfCK ? ExportarPdf(marcados, nombres, errores) : 0;
+            int dwfs = ExportarDwfCK ? ExportarDwf(marcados, nombres, errores) : 0;
             int dwgs = ExportarDwgCK ? ExportarDwg(marcados, nombres, errores) : 0;
 
             var partes = new List<string>();
             if (ExportarPdfCK) partes.Add($"{pdfs} PDF");
+            if (ExportarDwfCK) partes.Add($"{dwfs} DWF");
             if (ExportarDwgCK) partes.Add($"{dwgs} DWG");
-            string resumen = $"{string.Join(" y ", partes)} en {CarpetaTB}";
+            string resumen = $"{string.Join(", ", partes)} en {CarpetaTB}";
             Aviso(errores.Count == 0 ? $"Exportados {resumen}." : $"Exportados {resumen}, con {errores.Count} errores.");
 
             if (errores.Count > 0)
@@ -331,6 +357,51 @@ namespace ProyectoNice.ViewModels
             catch (Exception ex)
             {
                 errores.Add($"PDF {nombre}: {ex.Message}");
+            }
+            return false;
+        }
+
+        private int ExportarDwf(List<m_PlanoExportar> marcados, Dictionary<m_PlanoExportar, string> nombres, List<string> errores)
+        {
+            string carpeta = Path.Combine(CarpetaTB, "DWF");
+            Directory.CreateDirectory(carpeta);
+
+            //MergedViews une todos los planos del ViewSet en un solo DWF
+            if (UnirDwfCK)
+                return ExportarUnDwf(carpeta, Sanitizar(NombreDwfUnicoTB), marcados, true, errores) ? 1 : 0;
+
+            int exportados = 0;
+            foreach (m_PlanoExportar plano in marcados)
+            {
+                if (ExportarUnDwf(carpeta, nombres[plano], new List<m_PlanoExportar> { plano }, false, errores)) exportados++;
+            }
+            return exportados;
+        }
+
+        private bool ExportarUnDwf(string carpeta, string nombre, List<m_PlanoExportar> planosDwf, bool unir, List<string> errores)
+        {
+            if (!BorrarAnterior(Path.Combine(carpeta, nombre + ".dwf"), errores)) return false;
+
+            var vistas = new ViewSet();
+            foreach (m_PlanoExportar plano in planosDwf) vistas.Insert(plano.Plano);
+
+            var opciones = new DWFExportOptions
+            {
+                MergedViews = unir,
+                ExportObjectData = PropiedadesDwfCK,
+                ImageQuality = DWFImageQuality.High,
+                PaperFormat = ExportPaperFormat.Default,
+                CropBoxVisible = false
+            };
+
+            try
+            {
+                if (doc.Export(carpeta, nombre, vistas, opciones)) return true;
+                errores.Add($"DWF {nombre}: Revit no lo exporto.");
+            }
+            catch (Exception ex)
+            {
+                errores.Add($"DWF {nombre}: {ex.Message}");
             }
             return false;
         }
