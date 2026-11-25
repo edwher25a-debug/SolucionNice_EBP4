@@ -190,7 +190,7 @@ namespace ProyectoNice.ViewModels
             List<Element> cruzados = new FilteredElementCollector(doc, planta.Id).WhereElementIsNotElementType()
                 .WherePasses(new BoundingBoxIntersectsFilter(contorno))
                 .Where(e => !(e is CurveElement) && e.Category != null && e.Category.CategoryType == CategoryType.Model &&
-                            e.Category.Id.Value != (long)BuiltInCategory.OST_Cameras)
+                            e.Category.Id != new ElementId(BuiltInCategory.OST_Cameras))
                 .ToList();
 
             double zMin = cruzados.Select(e => e.get_BoundingBox(null)).Where(b => b != null).Select(b => b.Min.Z).DefaultIfEmpty(-Pies(5)).Min();

@@ -55,7 +55,11 @@ namespace ProyectoNice.ViewModels
                      Parameter param_comentario = Categoria_elemento.LookupParameter("CodigoBIM");
                     string CodigoProyecto = CodigoProyect.ToUpper();
                     string Categoria = CategoriasSeleccCB.Name.ToUpper();
+#if REVIT2024_OR_GREATER
                     string Id = Categoria_elemento.Id.Value.ToString();
+#else
+                    string Id = Categoria_elemento.Id.IntegerValue.ToString();
+#endif
                     string Consecutivo = secuencia.ToString();
                     string codigoBIM = $"{CodigoProyecto}-{Categoria}-{Id}-{Consecutivo}";
                     param_comentario.Set(codigoBIM);
