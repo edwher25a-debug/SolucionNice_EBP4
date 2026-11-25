@@ -72,6 +72,27 @@
                     </Grid>
                 </StackPanel>
             </GroupBox>
+            <GroupBox Header="DWF">
+                <StackPanel>
+                    <CheckBox Margin="0,4" IsChecked="{Binding ExportarDwfCK}">Exportar a DWF</CheckBox>
+                    <Grid IsEnabled="{Binding ExportarDwfCK}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="260"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <CheckBox Grid.ColumnSpan="2" Margin="0,4" IsChecked="{Binding UnirDwfCK}">Todos los planos en un solo DWF</CheckBox>
+                        <TextBlock VerticalAlignment="Center" Grid.Row="1">Nombre del DWF unico</TextBlock>
+                        <CheckBox Grid.Row="2" Grid.ColumnSpan="2" Margin="0,4" IsChecked="{Binding PropiedadesDwfCK}">Incluir las propiedades de los elementos (para revisar en Design Review)</CheckBox>
+
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding NombreDwfUnicoTB}" IsEnabled="{Binding UnirDwfCK}"/>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
             <GroupBox Header="DWG">
                 <StackPanel>
                     <CheckBox Margin="0,4" IsChecked="{Binding ExportarDwgCK}">Exportar a DWG</CheckBox>
@@ -117,7 +138,7 @@
                     <Button Grid.Row="2" Grid.Column="2" Padding="10,3" Command="{Binding ElegirCarpetaBT}">...</Button>
                 </Grid>
             </GroupBox>
-            <TextBlock Foreground="{DynamicResource TextoSuave}" TextWrapping="Wrap">Los PDF quedan en la subcarpeta PDF y los DWG en la subcarpeta DWG. Si ya existe un archivo con el mismo nombre se reemplaza. El tamaño de hoja del PDF sale del cuadro de rotulacion de cada plano. La configuracion de exportacion DWG define capas, colores y unidades; las dos casillas de abajo se aplican encima de ella.</TextBlock>
+            <TextBlock Foreground="{DynamicResource TextoSuave}" TextWrapping="Wrap">Cada formato queda en su subcarpeta: PDF, DWF y DWG. Si ya existe un archivo con el mismo nombre se reemplaza. El tamaño de hoja del PDF y del DWF sale del cuadro de rotulacion de cada plano. La configuracion de exportacion DWG define capas, colores y unidades; las dos casillas de abajo se aplican encima de ella.</TextBlock>
         </StackPanel>
         </ScrollViewer>
     </DockPanel>
