@@ -1,10 +1,10 @@
-# Genera los instaladores .msi de ProyectoNice para Revit 2024, 2025 y 2026.
+# Genera los instaladores .msi de ProyectoNice para Revit 2023, 2024, 2025 y 2026.
 # Requisitos: .NET SDK y Revit cerrado (la compilacion copia el add-in a la carpeta Addins).
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
 $addin = "..\ProyectoNice"
-$versiones = @{ "R24" = "2024"; "R25" = "2025"; "R26" = "2026" }
+$versiones = @{ "R23" = "2023"; "R24" = "2024"; "R25" = "2025"; "R26" = "2026" }
 $staging = Join-Path $PSScriptRoot "output\staging"
 
 if (Test-Path $staging) { Remove-Item $staging -Recurse -Force }
